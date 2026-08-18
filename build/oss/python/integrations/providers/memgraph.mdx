@@ -3,6 +3,8 @@ title: "Memgraph integrations"
 description: "Integrate with Memgraph using LangChain Python."
 ---
 
+import LangchainExperimentalUnmaintained from '/snippets/python/oss/langchain-experimental-unmaintained.mdx';
+
 >Memgraph is a high-performance, in-memory graph database that is optimized for real-time queries and analytics.
 >Get started with Memgraph by visiting [their website](https://memgraph.com/).
 
@@ -26,9 +28,11 @@ See a [usage example](/oss/python/integrations/graphs/memgraph)
 
 You can use the integration to construct a knowledge graph from unstructured data.
 
+<LangchainExperimentalUnmaintained />
+
 ```python
 from langchain_memgraph.graphs.memgraph import MemgraphLangChain
-from langchain_experimental.graph_transformers import LLMGraphTransformer
+from langchain_neo4j import LLMGraphTransformer
 ```
 
 See a [usage example](/oss/python/integrations/graphs/memgraph)
@@ -36,7 +40,7 @@ See a [usage example](/oss/python/integrations/graphs/memgraph)
 ## Memgraph tools and toolkit
 
 Memgraph also provides a toolkit that allows you to interact with the Memgraph database.
-See a [usage example](/oss/python/integrations/tools/memgraph).
+See a [usage example](https://github.com/memgraph/langchain-memgraph).
 
 ```python
 from langchain_memgraph import MemgraphToolkit
@@ -44,9 +48,11 @@ from langchain_memgraph import MemgraphToolkit
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/python/integrations/providers/memgraph.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

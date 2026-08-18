@@ -1,7 +1,11 @@
 ---
-title: "AstraDB integration"
-description: "Integrate with the AstraDB document loader using LangChain Python."
+title: AstraDB integration
+description: Integrate with the AstraDB document loader using LangChain Python.
+integration:
+  name: AstraDB
+  pypi: langchain-astradb
 ---
+
 
 > [DataStax Astra DB](https://docs.datastax.com/en/astra-db-serverless/index.html) is a serverless
 > AI-ready database built on `Apache Cassandra®` and made conveniently available
@@ -9,7 +13,7 @@ description: "Integrate with the AstraDB document loader using LangChain Python.
 
 ## Overview
 
-The Astra DB Document Loader returns a list of LangChain [`Document`](https://reference.langchain.com/python/langchain_core/documents/#langchain_core.documents.base.Document) objects read from an Astra DB collection.
+The Astra DB Document Loader returns a list of LangChain [`Document`](https://reference.langchain.com/python/langchain-core/documents/base/Document) objects read from an Astra DB collection.
 
 The loader takes the following parameters:
 
@@ -44,7 +48,7 @@ metadata={
 from langchain_astradb import AstraDBLoader
 ```
 
-[**API Reference:** `AstraDBLoader`](https://python.langchain.com/api_reference/astradb/document_loaders/langchain_astradb.document_loaders.AstraDBLoader.html#langchain_astradb.document_loaders.AstraDBLoader)
+[**API Reference:** `AstraDBLoader`](https://reference.langchain.com/python/langchain-astradb/document_loaders/AstraDBLoader)
 
 ```python
 from getpass import getpass
@@ -82,9 +86,11 @@ Document(metadata={'namespace': 'default_keyspace', 'api_endpoint': 'https://012
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/python/integrations/document_loaders/astradb.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

@@ -1,7 +1,12 @@
 ---
-title: "Databricks unity catalog (Uc) integration"
-description: "Integrate with the Databricks unity catalog (Uc) tool using LangChain Python."
+title: Databricks unity catalog (Uc) integration
+description: Integrate with the Databricks unity catalog (Uc) tool using LangChain Python.
+integration:
+  name: Databricks unity catalog (Uc)
+  pypi: databricks-langchain
 ---
+
+
 
 This notebook shows how to use UC functions as LangChain tools, with both LangChain and LangGraph agent APIs.
 
@@ -29,7 +34,7 @@ $$
 It runs in a secure and isolated environment within a Databricks SQL warehouse.
 
 ```python
-pip install -qU databricks-sdk langchain-community databricks-langchain langgraph mlflow
+pip install -qU databricks-sdk databricks-langchain langgraph mlflow
 ```
 
 ```python
@@ -132,9 +137,11 @@ Invoking: `main__tools__python_exec` with `{'code': 'print(36939 * 8922.4)'}`
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/python/integrations/tools/databricks.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

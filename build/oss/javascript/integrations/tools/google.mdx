@@ -1,8 +1,12 @@
 ---
-title: "Google integration"
-sidebarTitle: "Tools"
-description: "Integrate with Google Gemini tools using LangChain JavaScript."
+title: Google integration
+sidebarTitle: Tools
+description: Integrate with Google Gemini tools using LangChain JavaScript.
+integration:
+  name: Google
+  npm: '@langchain/google'
 ---
+
 
 The `@langchain/google` package supports Gemini's built-in tools, which provide capabilities like web search grounding, code execution, URL context retrieval, and more. These tools are passed as Gemini-native objects to `ChatGoogle` via `bindTools()` or the `tools` call option.
 
@@ -254,9 +258,11 @@ For more information, see [Google's Vertex AI Search grounding documentation](ht
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/javascript/integrations/tools/google.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

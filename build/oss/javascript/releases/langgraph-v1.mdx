@@ -47,7 +47,7 @@ The LangGraph `createReactAgent` prebuilt has been deprecated in favor of LangCh
 
 ## Typed interrupts
 
-[`StateGraph`](https://reference.langchain.com/javascript/classes/_langchain_langgraph.index.StateGraph.html) now accepts a map of interrupt types in the constructor to more closely constrain the types of interrupts that can be used within a graph.
+[`StateGraph`](https://reference.langchain.com/javascript/langchain-langgraph/index/StateGraph) now accepts a map of interrupt types in the constructor to more closely constrain the types of interrupts that can be used within a graph.
 
 ```typescript expandable
 import { StateGraph, MemorySaver, interrupt } from "@langchain/langgraph";
@@ -97,7 +97,7 @@ LangGraph v1 comes with a few enhancements when interacting with a LangGraph app
 
 The low-level `toLangGraphEventStream` helper has been removed. Streaming responses are now handled natively by the SDK, and you can select the wire format via passing in the `encoding` format to `graph.stream`. This makes switching between SSE and normal JSON responses straightforward without changing UI logic.
 
-See the [migration guide](/oss/javascript/migrate/langgraph-v1#stream-encoding) for more information.
+See the [migration guide](/oss/javascript/migrate/langgraph-v1#event-stream-encoding) for more information.
 
 ### Custom transports in `useStream`
 
@@ -147,9 +147,11 @@ Please report any issues discovered with 1.0 on [GitHub](https://github.com/lang
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/javascript/releases/langgraph-v1.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

@@ -3,8 +3,8 @@ title: Build a personal assistant with subagents
 sidebarTitle: "Subagents: Personal assistant"
 ---
 
-import ChatModelTabsPy from '/snippets/chat-model-tabs.mdx';
-import ChatModelTabsJs from '/snippets/chat-model-tabs-js.mdx';
+import ChatModelTabsPy from '/snippets/javascript/chat-model-tabs.mdx';
+import ChatModelTabsJs from '/snippets/javascript/chat-model-tabs-js.mdx';
 
 ## Overview
 
@@ -16,6 +16,8 @@ In this tutorial, you'll build a personal assistant system that demonstrates the
 - An **email agent** that manages communication, drafts messages, and sends notifications.
 
 We will also incorporate [human-in-the-loop review](/oss/javascript/langchain/human-in-the-loop) to allow users to approve, edit, and reject actions (such as outbound emails) as desired.
+
+
 
 ### Why use a supervisor?
 
@@ -53,16 +55,16 @@ For more details, see our [Installation guide](/oss/javascript/langchain/install
 
 ### LangSmith
 
-Set up [LangSmith](https://smith.langchain.com) to inspect what is happening inside your agent. Then set the following environment variables:
+Set up [LangSmith](https://smith.langchain.com?utm_source=docs&utm_medium=cta&utm_campaign=langsmith-signup&utm_content=oss-langchain-multi-agent-subagents-personal-assistant) to inspect what is happening inside your agent. Then set the following environment variables:
 
 
 
 <CodeGroup>
-```bash bash
+```bash Shell
 export LANGSMITH_TRACING="true"
 export LANGSMITH_API_KEY="..."
 ```
-```typescript typescript
+```typescript TypeScript
 process.env.LANGSMITH_TRACING = "true";
 process.env.LANGSMITH_API_KEY = "...";
 ```
@@ -154,11 +156,20 @@ The calendar agent understands natural language scheduling requests and translat
 ```typescript
 import { createAgent } from "langchain";
 
+const now = new Date();
+const today = [
+  now.getFullYear(),
+  String(now.getMonth() + 1).padStart(2, "0"),
+  String(now.getDate()).padStart(2, "0"),
+].join("-");
+
 const CALENDAR_AGENT_PROMPT = `
+Today's date is ${today}.
 You are a calendar scheduling assistant.
 Parse natural language scheduling requests (e.g., 'next Tuesday at 2pm')
 into proper ISO datetime formats.
 Use get_available_time_slots to check availability when needed.
+If there is no suitable time slot, stop and confirm unavailability in your response.
 Use create_calendar_event to schedule events.
 Always confirm what was scheduled in your final response.
 `.trim();
@@ -178,19 +189,26 @@ Test the calendar agent to see how it handles natural language scheduling:
 ```typescript
 const query = "Schedule a team meeting next Tuesday at 2pm for 1 hour";
 
-const stream = await calendarAgent.stream({
-  messages: [{ role: "user", content: query }]
-});
+const stream = await calendarAgent.streamEvents(
+  { messages: [{ role: "user", content: query }] },
+  { version: "v3" }
+);
 
-for await (const step of stream) {
-  for (const update of Object.values(step)) {
-    if (update && typeof update === "object" && "messages" in update) {
-      for (const message of update.messages) {
-        console.log(message.toFormattedString());
+await Promise.all([
+  (async () => {
+    for await (const message of stream.messages) {
+      for await (const token of message.text) {
+        process.stdout.write(token);
       }
     }
-  }
-}
+  })(),
+  (async () => {
+    for await (const call of stream.toolCalls) {
+      console.log(`\nTool call: ${call.name}(${JSON.stringify(call.input)})`);
+      console.log(`Tool result: ${await call.output}`);
+    }
+  })(),
+]);
 ```
 
 ```
@@ -253,19 +271,26 @@ Test the email agent with a natural language request:
 ```typescript
 const query = "Send the design team a reminder about reviewing the new mockups";
 
-const stream = await emailAgent.stream({
-  messages: [{ role: "user", content: query }]
-});
+const stream = await emailAgent.streamEvents(
+  { messages: [{ role: "user", content: query }] },
+  { version: "v3" }
+);
 
-for await (const step of stream) {
-  for (const update of Object.values(step)) {
-    if (update && typeof update === "object" && "messages" in update) {
-      for (const message of update.messages) {
-        console.log(message.toFormattedString());
+await Promise.all([
+  (async () => {
+    for await (const message of stream.messages) {
+      for await (const token of message.text) {
+        process.stdout.write(token);
       }
     }
-  }
-}
+  })(),
+  (async () => {
+    for await (const call of stream.toolCalls) {
+      console.log(`\nTool call: ${call.name}(${JSON.stringify(call.input)})`);
+      console.log(`Tool result: ${await call.output}`);
+    }
+  })(),
+]);
 ```
 
 ```
@@ -366,7 +391,7 @@ const SUPERVISOR_PROMPT = `
 You are a helpful personal assistant.
 You can schedule calendar events and send emails.
 Break down user requests into appropriate tool calls and coordinate the results.
-When a request involves multiple actions, use multiple tools in sequence.
+When a request involves multiple actions, use multiple tools in sequence or in parallel as appropriate.
 `.trim();
 
 const supervisorAgent = createAgent({
@@ -388,19 +413,26 @@ Now test your complete system with complex requests that require coordination ac
 ```typescript
 const query = "Schedule a team standup for tomorrow at 9am";
 
-const stream = await supervisorAgent.stream({
-  messages: [{ role: "user", content: query }]
-});
+const stream = await supervisorAgent.streamEvents(
+  { messages: [{ role: "user", content: query }] },
+  { version: "v3" }
+);
 
-for await (const step of stream) {
-  for (const update of Object.values(step)) {
-    if (update && typeof update === "object" && "messages" in update) {
-      for (const message of update.messages) {
-        console.log(message.toFormattedString());
+await Promise.all([
+  (async () => {
+    for await (const message of stream.messages) {
+      for await (const token of message.text) {
+        process.stdout.write(token);
       }
     }
-  }
-}
+  })(),
+  (async () => {
+    for await (const call of stream.toolCalls) {
+      console.log(`\nTool call: ${call.name}(${JSON.stringify(call.input)})`);
+      console.log(`Tool result: ${await call.output}`);
+    }
+  })(),
+]);
 ```
 
 ```
@@ -434,19 +466,26 @@ const query =
   "Schedule a meeting with the design team next Tuesday at 2pm for 1 hour, " +
   "and send them an email reminder about reviewing the new mockups.";
 
-const stream = await supervisorAgent.stream({
-  messages: [{ role: "user", content: query }]
-});
+const stream = await supervisorAgent.streamEvents(
+  { messages: [{ role: "user", content: query }] },
+  { version: "v3" }
+);
 
-for await (const step of stream) {
-  for (const update of Object.values(step)) {
-    if (update && typeof update === "object" && "messages" in update) {
-      for (const message of update.messages) {
-        console.log(message.toFormattedString());
+await Promise.all([
+  (async () => {
+    for await (const message of stream.messages) {
+      for await (const token of message.text) {
+        process.stdout.write(token);
       }
     }
-  }
-}
+  })(),
+  (async () => {
+    for await (const call of stream.toolCalls) {
+      console.log(`\nTool call: ${call.name}(${JSON.stringify(call.input)})`);
+      console.log(`Tool result: ${await call.output}`);
+    }
+  })(),
+]);
 ```
 
 ```
@@ -478,6 +517,10 @@ Let me know if you'd like to add more details to the meeting or include addition
 ```
 
 The supervisor recognizes this requires both calendar and email actions, calls `schedule_event` for the meeting, then calls `manage_email` for the reminder. Each sub-agent completes its task, and the supervisor synthesizes both results into a coherent response.
+
+<Note>
+The supervisor dispatches tasks to subagents sequentially by default. Each tool call completes before the next one starts. However, many LLMs will issue multiple tool calls in a single response (as shown in the trace above, where both `schedule_event` and `manage_email` are called together), which the runtime executes in parallel. You can also configure explicit parallel dispatch. See the [`create_supervisor` reference docs](https://reference.langchain.com/python/langgraph-supervisor/supervisor/create_supervisor) for details.
+</Note>
 
 <Tip>
 Refer to the [LangSmith trace](https://smith.langchain.com/public/95cd00a3-d1f9-4dba-9731-7bf733fb6a3c/r) to see the detailed information flow for the above run, including individual chat model prompts and responses.
@@ -566,17 +609,26 @@ const getAvailableTimeSlots = tool(
 // ============================================================================
 
 const llm = new ChatAnthropic({
-  model: "claude-haiku-4-5-20251001",
+  model: "gpt-5.5",
 });
+
+const now = new Date();
+const today = [
+  now.getFullYear(),
+  String(now.getMonth() + 1).padStart(2, "0"),
+  String(now.getDate()).padStart(2, "0"),
+].join("-");
 
 const calendarAgent = createAgent({
   model: llm,
   tools: [createCalendarEvent, getAvailableTimeSlots],
   systemPrompt: `
+Today's date is ${today}.
 You are a calendar scheduling assistant.
 Parse natural language scheduling requests (e.g., 'next Tuesday at 2pm')
 into proper ISO datetime formats.
 Use get_available_time_slots to check availability when needed.
+If there is no suitable time slot, stop and confirm unavailability in your response.
 Use create_calendar_event to schedule events.
 Always confirm what was scheduled in your final response.
   `.trim(),
@@ -673,19 +725,26 @@ const userRequest =
 console.log("User Request:", userRequest);
 console.log(`\n${"=".repeat(80)}\n`);
 
-const stream = await supervisorAgent.stream({
-  messages: [{ role: "user", content: userRequest }],
-});
+const stream = await supervisorAgent.streamEvents(
+  { messages: [{ role: "user", content: userRequest }] },
+  { version: "v3" }
+);
 
-for await (const step of stream) {
-  for (const update of Object.values(step)) {
-    if (update && typeof update === "object" && "messages" in update) {
-      for (const message of update.messages) {
-        console.log(message.toFormattedString());
+await Promise.all([
+  (async () => {
+    for await (const message of stream.messages) {
+      for await (const token of message.text) {
+        process.stdout.write(token);
       }
     }
-  }
-}
+  })(),
+  (async () => {
+    for await (const call of stream.toolCalls) {
+      console.log(`\nTool call: ${call.name}(${JSON.stringify(call.input)})`);
+      console.log(`Tool result: ${await call.output}`);
+    }
+  })(),
+]);
 ```
 
 
@@ -756,19 +815,29 @@ const query =
 const config = { configurable: { thread_id: "6" } };
 
 const interrupts: any[] = [];
-const stream = await supervisorAgent.stream(
+const stream = await supervisorAgent.streamEvents(
   { messages: [{ role: "user", content: query }] },
-  config
+  { ...config, version: "v3" }
 );
 
-for await (const step of streamA) {
-  for (const update of Object.values(step)) {
-    for (const message of update.messages) {
-      console.log(message.toFormattedString());
+await Promise.all([
+  (async () => {
+    for await (const message of stream.messages) {
+      for await (const token of message.text) {
+        process.stdout.write(token);
+      }
     }
-    const interrupt = update.__interrupt__?.[0];
+  })(),
+  (async () => {
+    for await (const call of stream.toolCalls) {
+      console.log(`\nTool call: ${call.name}(${JSON.stringify(call.input)})`);
+    }
+  })(),
+]);
+if (stream.interrupted) {
+  for (const interrupt of stream.interrupts) {
     interrupts.push(interrupt);
-    console.log(`\nINTERRUPTED: ${interrupt?.id}`);
+    console.log(`\nINTERRUPTED: ${interrupt.interruptId}`);
   }
 }
 ```
@@ -795,8 +864,8 @@ This time we've interrupted execution. Let's inspect the interrupt events:
 
 ```typescript
 for (const interrupt of interrupts) {
-  for (const request of interrupt.value.actionRequests) {
-    console.log(`INTERRUPTED: ${interrupt.id}`);
+  for (const request of interrupt.payload.actionRequests) {
+    console.log(`INTERRUPTED: ${interrupt.interruptId}`);
     console.log(`${request.description}\n`);
   }
 }
@@ -816,7 +885,7 @@ Tool: send_email
 Args: {'to': ['designteam@example.com'], 'subject': 'Reminder: Review New Mockups Before Meeting Next Tuesday at 2pm', 'body': "Hello Team,\n\nThis is a reminder to review the new mockups ahead of our meeting scheduled for next Tuesday at 2pm. Your feedback and insights will be valuable for our discussion and next steps.\n\nPlease ensure you've gone through the designs and are ready to share your thoughts during the meeting.\n\nThank you!\n\nBest regards,\n[Your Name]"}
 ```
 
-We can specify decisions for each interrupt by referring to its ID using a [`Command`](https://reference.langchain.com/javascript/classes/_langchain_langgraph.index.Command.html). Refer to the [human-in-the-loop guide](/oss/javascript/langchain/human-in-the-loop) for additional details. For demonstration purposes, here we will accept the calendar event, but edit the subject of the outbound email:
+We can specify decisions for each interrupt by referring to its ID using a [`Command`](https://reference.langchain.com/javascript/langchain-langgraph/index/Command). Refer to the [human-in-the-loop guide](/oss/javascript/langchain/human-in-the-loop) for additional details. For demonstration purposes, here we will accept the calendar event, but edit the subject of the outbound email:
 
 
 
@@ -825,33 +894,38 @@ import { Command } from "@langchain/langgraph"; // [!code highlight]
 
 const resume: Record<string, any> = {};
 for (const interrupt of interrupts) {
-  const actionRequest = interrupt.value.actionRequests[0];
+  const actionRequest = interrupt.payload.actionRequests[0];
   if (actionRequest.name === "send_email") {
     // Edit email
     const editedAction = { ...actionRequest };
     editedAction.args.subject = "Mockups reminder";
-    resume[interrupt.id] = {
+    resume[interrupt.interruptId] = {
       decisions: [{ type: "edit", editedAction }]
     };
   } else {
-    resume[interrupt.id] = { decisions: [{ type: "approve" }] };
+    resume[interrupt.interruptId] = { decisions: [{ type: "approve" }] };
   }
 }
 
-const resumeStream = await supervisorAgent.stream(
+const resumeStream = await supervisorAgent.streamEvents(
   new Command({ resume }), // [!code highlight]
-  config
+  { ...config, version: "v3" }
 );
 
-for await (const step of resumeStream) {
-  for (const update of Object.values(step)) {
-    if (update && typeof update === "object" && "messages" in update) {
-      for (const message of update.messages) {
-        console.log(message.toFormattedString());
+await Promise.all([
+  (async () => {
+    for await (const message of resumeStream.messages) {
+      for await (const token of message.text) {
+        process.stdout.write(token);
       }
     }
-  }
-}
+  })(),
+  (async () => {
+    for await (const call of resumeStream.toolCalls) {
+      console.log(`\nTool call: ${call.name}(${JSON.stringify(call.input)})`);
+    }
+  })(),
+]);
 ```
 
 ```
@@ -986,13 +1060,15 @@ For simpler cases with just a few tools, use a single agent. When agents need to
 
 ## Next steps
 
-Learn about [handoffs](/oss/javascript/langchain/multi-agent/handoffs) for agent-to-agent conversations, explore [context engineering](/oss/javascript/langchain/context-engineering) to fine-tune information flow, read the [multi-agent overview](/oss/javascript/langchain/multi-agent) to compare different patterns, and use [LangSmith](https://smith.langchain.com) to debug and monitor your multi-agent system.
+Learn about [handoffs](/oss/javascript/langchain/multi-agent/handoffs) for agent-to-agent conversations, explore [context engineering](/oss/javascript/langchain/context-engineering) to fine-tune information flow, read the [multi-agent overview](/oss/javascript/langchain/multi-agent) to compare different patterns, and use [LangSmith](https://smith.langchain.com?utm_source=docs&utm_medium=cta&utm_campaign=langsmith-signup&utm_content=oss-langchain-multi-agent-subagents-personal-assistant) to debug and monitor your multi-agent system.
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langchain/multi-agent/subagents-personal-assistant.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

@@ -1,9 +1,10 @@
 ---
-title: Set up Agent Auth (Beta)
+title: Set up Agent Auth
+tag: "Beta"
 description: Enable secure access from agents to any system using OAuth 2.0 credentials with Agent Auth.
 ---
 
-<Note>Agent Auth is in **Beta** and under active development. To provide feedback or use this feature, reach out to the [LangChain team](https://forum.langchain.com/c/help/langsmith/).</Note>
+<Note>Agent Auth is in **[beta](/langsmith/release-stages)** and under active development. To provide feedback or use this feature, reach out to the [LangChain team](https://forum.langchain.com/c/help/langsmith/).</Note>
 
 ## Installation
 
@@ -165,7 +166,7 @@ auth_result = await client.authenticate(
 )
 ```
 
-During execution, if authentication is required, the SDK will throw an [interrupt](https://langchain-ai.github.io/langgraph/how-tos/human_in_the_loop/add-human-in-the-loop/#pause-using-interrupt). The agent execution pauses and presents the OAuth URL to the user:
+During execution, if authentication is required, the SDK will throw an [interrupt](/langsmith/add-human-in-the-loop). The agent execution pauses and presents the OAuth URL to the user:
 
 <Frame caption="Studio interrupt showing OAuth URL"><img src="/images/langgraph-auth-interrupt.png" /></Frame>
 
@@ -243,9 +244,11 @@ https://your-instance.com/host-oauth-callback/{provider_id}
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/langsmith/agent-auth.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

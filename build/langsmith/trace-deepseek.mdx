@@ -5,7 +5,7 @@ sidebarTitle: DeepSeek
 
 [DeepSeek](https://deepseek.com/) provides high-performance, OpenAI-compatible language models including `deepseek-chat` (for general conversations) and `deepseek-reasoner` (for advanced reasoning tasks). Using LangSmith allows you to debug, monitor, and evaluate your LLM applications by capturing structured traces of inputs, outputs, and metadata.
 
-This guide shows you how to integrate DeepSeek with LangSmith in both Python and TypeScript, using LangSmith's [`@traceable`](https://reference.langchain.com/python/langsmith/observability/sdk/run_helpers/#langsmith.run_helpers.traceable) (Python) and [`traceable(...)`](https://reference.langchain.com/javascript/modules/langsmith.html) (TypeScript) utilities to log LLM calls automatically.
+This guide shows you how to integrate DeepSeek with LangSmith in both Python and TypeScript, using LangSmith's [`@traceable`](https://reference.langchain.com/python/langsmith/run_helpers/traceable) (Python) and [`traceable(...)`](https://reference.langchain.com/javascript/modules/langsmith.html) (TypeScript) utilities to log LLM calls automatically.
 
 
 ## Installation
@@ -101,14 +101,6 @@ export DEEPSEEK_API_KEY="your-deepseek-api-key"
     };
 
     const callDeepSeek = traceable(
-    {
-        name: "DeepSeek Chat Completion",
-        run_type: "llm",
-        metadata: {
-        ls_provider: "deepseek",
-        ls_model_name: "deepseek-chat"
-        }
-    },
     async (messages: ChatMessage[]) => {
         const response = await openai.chat.completions.create({
         model: "deepseek-chat",
@@ -116,6 +108,14 @@ export DEEPSEEK_API_KEY="your-deepseek-api-key"
         });
 
         return response.choices[0].message;
+    },
+    {
+        name: "DeepSeek Chat Completion",
+        run_type: "llm",
+        metadata: {
+        ls_provider: "deepseek",
+        ls_model_name: "deepseek-chat"
+        }
     }
     );
 
@@ -134,6 +134,7 @@ export DEEPSEEK_API_KEY="your-deepseek-api-key"
     const result = await callDeepSeek(messages);
     console.log("Model reply:", result.content);
     })();
+
     ```
 
     </CodeGroup>
@@ -160,17 +161,17 @@ export DEEPSEEK_API_KEY="your-deepseek-api-key"
     python deepseek_trace.py
     ```
 
-    ```bash JavaScript
+    ```bash TypeScript
     node deepseek_trace.js
     ```
 
     </CodeGroup>
 
-    The function call will reach out to DeepSeek's API, and because of the `@traceable`/`traceable` wrapper, LangSmith will log this call's inputs and outputs as a new trace. You'll find the model's response printed to the console, and a corresponding run appear in the [LangSmith UI](https://smith.langchain.com).
+    The function call will reach out to DeepSeek's API, and because of the `@traceable`/`traceable` wrapper, LangSmith will log this call's inputs and outputs as a new trace. You'll find the model's response printed to the console, and a corresponding run appear in the [LangSmith UI](https://smith.langchain.com?utm_source=docs&utm_medium=cta&utm_campaign=langsmith-signup&utm_content=langsmith-trace-deepseek).
 
 ## View traces in LangSmith
 
-After running the example, you can inspect the recorded traces in the [LangSmith UI](https://smith.langchain.com):
+After running the example, you can inspect the recorded traces in the [LangSmith UI](https://smith.langchain.com?utm_source=docs&utm_medium=cta&utm_campaign=langsmith-signup&utm_content=langsmith-trace-deepseek):
 
 1. Open the LangSmith UI and log in to your account.
 1. Select the project you used for this integration (for example, the name set in `LANGSMITH_PROJECT`, or "default" if you didn't set one).
@@ -191,9 +192,11 @@ Once enabled, costs appear directly in the LangSmith UI alongside each traced De
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/langsmith/trace-deepseek.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

@@ -3,8 +3,8 @@ title: Build customer support with handoffs
 sidebarTitle: "Handoffs: Customer support"
 ---
 
-import ChatModelTabsPy from '/snippets/chat-model-tabs.mdx';
-import ChatModelTabsJs from '/snippets/chat-model-tabs-js.mdx';
+import ChatModelTabsPy from '/snippets/python/chat-model-tabs.mdx';
+import ChatModelTabsJs from '/snippets/python/chat-model-tabs-js.mdx';
 
 The [state machine pattern](/oss/python/langchain/multi-agent/handoffs) describes workflows where an agent's behavior changes as it moves through different states of a task. This tutorial shows how to implement a state machine by using tool calls to dynamically change a single agent's configuration—updating its available tools and instructions based on the current state. The state can be determined from multiple sources: the agent's past actions (tool calls), external state (such as API call results), or even initial user input (for example, by running a classifier to determine user intent).
 
@@ -20,7 +20,7 @@ Unlike the [subagents pattern](/oss/python/langchain/multi-agent/subagents-perso
 Here's the workflow we'll build:
 
 ```mermaid
-%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#4CAF50','primaryTextColor':'#fff','primaryBorderColor':'#2E7D32','lineColor':'#666','secondaryColor':'#FF9800','tertiaryColor':'#2196F3'}}}%%
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#E5F4FF','primaryTextColor':'#030710','primaryBorderColor':'#006DDD','lineColor':'#40668D','secondaryColor':'#F6FFDB','tertiaryColor':'#FDF3FF'}}}%%
 flowchart TD
     %% Start
     Start([💬 Customer reports<br>an issue]) --> Warranty{Is the device<br>under warranty?}
@@ -43,10 +43,10 @@ flowchart TD
     Escalate --> Close
 
     %% === Styling ===
-    classDef startEnd fill:#4CAF50,stroke:#2E7D32,stroke-width:2px,color:#fff
-    classDef decisionNode fill:#2196F3,stroke:#1565C0,stroke-width:2px,color:#fff
-    classDef actionNode fill:#FF9800,stroke:#E65100,stroke-width:2px,color:#fff
-    classDef escalateNode fill:#f44336,stroke:#c62828,stroke-width:2px,color:#fff
+    classDef startEnd fill:#F6FFDB,stroke:#6E8900,stroke-width:2px,color:#2E3900
+    classDef decisionNode fill:#E5F4FF,stroke:#006DDD,stroke-width:2px,color:#030710
+    classDef actionNode fill:#FDF3FF,stroke:#7E65AE,stroke-width:2px,color:#504B5F
+    classDef escalateNode fill:#F8E8E6,stroke:#B27D75,stroke-width:2px,color:#634643
 
     class Start,Close startEnd
     class Warranty,IssueType,OutOfWarranty decisionNode
@@ -79,14 +79,14 @@ For more details, see our [Installation guide](/oss/python/langchain/install).
 
 ### LangSmith
 
-Set up [LangSmith](https://smith.langchain.com) to inspect what is happening inside your agent. Then set the following environment variables:
+Set up [LangSmith](https://smith.langchain.com?utm_source=docs&utm_medium=cta&utm_campaign=langsmith-signup&utm_content=oss-langchain-multi-agent-handoffs-customer-support) to inspect what is happening inside your agent. Then set the following environment variables:
 
 <CodeGroup>
-```bash bash
+```bash Shell
 export LANGSMITH_TRACING="true"
 export LANGSMITH_API_KEY="..."
 ```
-```python python
+```python Python
 import getpass
 import os
 
@@ -372,10 +372,10 @@ Test the complete workflow:
 
 ```python
 from langchain.messages import HumanMessage
-import uuid
+from langchain_core.utils.uuid import uuid7
 
 # Configuration for this conversation thread
-thread_id = str(uuid.uuid4())
+thread_id = str(uuid7())
 config = {"configurable": {"thread_id": thread_id}}
 
 # Turn 1: Initial message - starts with warranty_collector step
@@ -497,7 +497,7 @@ agent = create_agent(
     middleware=[
         apply_step_config,
         SummarizationMiddleware(  # [!code highlight]
-            model="gpt-4.1-mini",
+            model="gpt-5.4-mini",
             trigger=("tokens", 4000),
             keep=("messages", 10)
         )
@@ -595,7 +595,7 @@ A single agent dynamically changes its behavior based on the current_step state,
 creating a state machine for sequential information collection.
 """
 
-import uuid
+from langchain_core.utils.uuid import uuid7
 
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
@@ -608,7 +608,7 @@ from langchain.chat_models import init_chat_model
 from langchain.messages import HumanMessage, ToolMessage
 from langchain.tools import tool, ToolRuntime
 
-model = init_chat_model("anthropic:claude-3-5-sonnet-latest")
+model = init_chat_model("google_genai:gemini-3.6-flash")
 
 
 # Define the possible workflow steps
@@ -779,7 +779,7 @@ agent = create_agent(
     middleware=[
         apply_step_config,
         SummarizationMiddleware(
-            model="gpt-4.1-mini",
+            model="gpt-5.4-mini",
             trigger=("tokens", 4000),
             keep=("messages", 10)
         )
@@ -793,7 +793,7 @@ agent = create_agent(
 # ============================================================================
 
 if __name__ == "__main__":
-    thread_id = str(uuid.uuid4())
+    thread_id = str(uuid7())
     config = {"configurable": {"thread_id": thread_id}}
 
     result = agent.invoke(
@@ -828,13 +828,15 @@ if __name__ == "__main__":
 - Learn about the [subagents pattern](/oss/python/langchain/multi-agent/subagents-personal-assistant) for centralized orchestration
 - Explore [middleware](/oss/python/langchain/middleware) for more dynamic behaviors
 - Read the [multi-agent overview](/oss/python/langchain/multi-agent) to compare patterns
-- Use [LangSmith](https://smith.langchain.com) to debug and monitor your multi-agent system
+- Use [LangSmith](https://smith.langchain.com?utm_source=docs&utm_medium=cta&utm_campaign=langsmith-signup&utm_content=oss-langchain-multi-agent-handoffs-customer-support) to debug and monitor your multi-agent system
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langchain/multi-agent/handoffs-customer-support.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

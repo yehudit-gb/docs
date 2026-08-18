@@ -73,7 +73,7 @@ Both types of tests are implemented as [`pytest`](https://docs.pytest.org/en/sta
 
 Depending on your integration type, you will need to implement either or both unit and integration tests.
 
-By subclassing the standard test suite for your integration type, you get the full collection of standard tests for that type. For a test run to be successful, the a given test should pass only if the model supports the capability being tested. Otherwise, the test should be skipped.
+By subclassing the standard test suite for your integration type, you get the full collection of standard tests for that type. For a test run to be successful, a given test should pass only if the model supports the capability being tested. Otherwise, the test should be skipped.
 
 Because different integrations offer unique sets of features, most standard tests provided by LangChain are **opt-in by default** to prevent false positives. Consequently, you will need to override properties to indicate which features your integration supports - see the below example for an illustration.
 
@@ -110,7 +110,6 @@ Here are some example implementations of standard tests from popular integration
             <Card title="ChatAnthropic" href="https://github.com/langchain-ai/langchain/blob/master/libs/partners/anthropic/tests/unit_tests/test_standard.py" arrow>Unit tests</Card>
             <Card title="ChatGenAI" href="https://github.com/langchain-ai/langchain-google/blob/main/libs/genai/tests/unit_tests/test_standard.py" arrow>Unit tests</Card>
         </Columns>
-
     </Tab>
     <Tab title="Integration tests">
         <Columns cols={3}>
@@ -118,9 +117,27 @@ Here are some example implementations of standard tests from popular integration
             <Card title="ChatAnthropic" href="https://github.com/langchain-ai/langchain/blob/master/libs/partners/anthropic/tests/integration_tests/test_standard.py" arrow>Integration tests</Card>
             <Card title="ChatGenAI" href="https://github.com/langchain-ai/langchain-google/blob/main/libs/genai/tests/integration_tests/test_standard.py" arrow>Integration tests</Card>
         </Columns>
+    </Tab>
+    <Tab title="Sandbox integration tests">
+        Ensure your integration passes the standard test suite.
+        See the [Daytona integration](https://github.com/langchain-ai/deepagents/blob/main/libs/partners/daytona/tests/integration_tests/test_integration.py) as an example.
 
+        <Card title="Daytona" href="https://github.com/langchain-ai/deepagents/blob/main/libs/partners/daytona/tests/integration_tests/test_integration.py" arrow>Sandbox Integration tests</Card>
     </Tab>
 </Tabs>
+
+
+
+## Sandbox integrations
+
+Deep Agents sandbox integrations use `SandboxIntegrationTests` from `langchain_tests.integration_tests`.
+Subclass it and provide a `sandbox` fixture that yields a `SandboxBackendProtocol` instance.
+Use the [Daytona integration tests](https://github.com/langchain-ai/deepagents/blob/main/libs/partners/daytona/tests/integration_tests/test_integration.py) as a reference implementation.
+See [Contributing a sandbox integration](/oss/python/contributing/integrations-langchain) for publishing guidelines.
+
+
+
+
 
 ---
 
@@ -154,16 +171,17 @@ uv run --group test pytest tests/integration_tests/test_chat_models.py::TestChat
 ```
 
 
-
 ## Troubleshooting
 
 For a full list of the standard test suites that are available, as well as information on which tests are included and how to troubleshoot common issues, see the [Standard Tests API Reference](https://reference.langchain.com/python/langchain_tests).
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/contributing/standard-tests-langchain.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

@@ -1,6 +1,9 @@
 ---
-title: "PGVectorStore integration"
-description: "Integrate with the PGVectorStore using LangChain Python."
+title: PGVectorStore integration
+description: Integrate with the PGVectorStore using LangChain Python.
+integration:
+  name: PGVectorStore
+  pypi: langchain-postgres
 ---
 
 `PGVectorStore` is an implementation of a LangChain vectorstore using `postgres` as the backend.
@@ -117,7 +120,7 @@ await pg_engine.ainit_vectorstore_table(
 
 ### Create an embedding class instance
 
-You can use any [LangChain embeddings model](https://python.langchain.com/docs/integrations/text_embedding/).
+You can use any [LangChain embeddings model](https://python.langchain.com/docs/integrations/embeddings/).
 
 ```python
 from langchain_cohere import CohereEmbeddings
@@ -218,7 +221,7 @@ docs = await store.asimilarity_search_by_vector(query_vector, k=2)
 print(docs)
 ```
 
-## Add a index
+## Add an index
 
 Speed up vector search queries by applying a vector index. Learn more about [vector indexes](https://cloud.google.com/blog/products/databases/faster-similarity-search-performance-with-pgvector-indexes).
 
@@ -451,7 +454,7 @@ Note:
 
     `ALTER TABLE products ADD COLUMN embed vector(768) DEFAULT NULL`
 
-1. For new records, added via [`VectorStore`](https://reference.langchain.com/python/langchain_core/vectorstores/?h=#langchain_core.vectorstores.base.VectorStore) embeddings are automatically generated.
+1. For new records, added via [`VectorStore`](https://reference.langchain.com/python/langchain-core/vectorstores/base/VectorStore) embeddings are automatically generated.
 
 ## Clean up
 
@@ -467,21 +470,23 @@ await pg_engine.adrop_table(TABLE_NAME)
 
 For guides on how to use this vector store for retrieval-augmented generation (RAG), see the following sections:
 
-* [Tutorials](/oss/python/langchain/rag)
-* [How-to: Question and answer with RAG](https://python.langchain.com/docs/how_to/#qa-with-rag)
-* [Retrieval conceptual docs](https://python.langchain.com/docs/concepts/retrieval)
+- [Retrieval docs](/oss/python/deepagents/retrieval)
+- [Build a RAG app with LangChain](/oss/python/deepagents/rag)
+- [Agentic RAG](/oss/python/langgraph/agentic-rag)
 
 ---
 
 ## API reference
 
-For detailed documentation of all VectorStore features and configurations head to the API reference: [python.langchain.com/api_reference/postgres/v2/langchain_postgres.v2.vectorstores.PGVectorStore.html](https://python.langchain.com/api_reference/postgres/v2/langchain_postgres.v2.vectorstores.PGVectorStore.html)
+For detailed documentation of all `PGVectorStore` features and configurations head to the [API reference](https://reference.langchain.com/python/langchain-postgres/v2/vectorstores/PGVectorStore)
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/python/integrations/vectorstores/pgvectorstore.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

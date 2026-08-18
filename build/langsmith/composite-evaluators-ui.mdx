@@ -5,7 +5,7 @@ sidebarTitle: Composite evaluators
 
 _Composite evaluators_ are a way to combine multiple evaluator scores into a single [score](/langsmith/evaluation-concepts#evaluator-outputs). This is useful when you want to evaluate multiple aspects of your application and combine the results into a single result.
 
-This guide shows you how to define a [composite evaluator](/langsmith/evaluation-concepts#llm-as-judge) using the [LangSmith UI](https://smith.langchain.com).
+This guide shows you how to define a [composite evaluator](/langsmith/evaluation-concepts#llm-as-judge) using the [LangSmith UI](https://smith.langchain.com?utm_source=docs&utm_medium=cta&utm_campaign=langsmith-signup&utm_content=langsmith-composite-evaluators-ui).
 
 <Note>
 To create composite evaluators programmatically using the SDK, refer to [How to create a composite evaluator (SDK)](/langsmith/composite-evaluators-sdk).
@@ -13,7 +13,7 @@ To create composite evaluators programmatically using the SDK, refer to [How to 
 
 ## Create a composite evaluator
 
-You can create composite evaluators on a [tracing project](/langsmith/observability-concepts#projects) (for [online evaluations](/langsmith/evaluation-concepts#online-evaluation)) or a [dataset](/langsmith/evaluation-concepts#datasets) (for [offline evaluations](/langsmith/evaluation-concepts#offline-evaluation)). With composite evaluators in the UI, you can compute a weighted average or weighted sum of multiple evaluator scores, with configurable weights.
+You can create composite evaluators on a [tracing project](/langsmith/observability-concepts#projects) (for [online evaluations](/langsmith/evaluation-concepts#online-evaluations)) or a [dataset](/langsmith/evaluation-concepts#datasets) (for [offline evaluations](/langsmith/evaluation-concepts#offline-evaluations)). With composite evaluators in the UI, you can compute a weighted average or weighted sum of multiple evaluator scores, with configurable weights.
 
 <div style={{ textAlign: 'center' }}>
 <img
@@ -64,9 +64,11 @@ Composite scores are attached to a run as **feedback**, similarly to feedback fr
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/langsmith/composite-evaluators-ui.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

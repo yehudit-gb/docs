@@ -38,7 +38,7 @@ sequenceDiagram
 
 ## When to use
 
-Use the handoffs pattern when you need to enforce sequential constraints (unlock capabilities only after preconditions are met), the agent needs to converse directly with the user across different states, or you're building multi-stage conversational flows. This pattern is particularly valuable for customer support scenarios where you need to collect information in a specific sequence — for example, collecting a warranty ID before processing a refund.
+Use the handoffs pattern when you need to enforce sequential constraints (unlock capabilities only after preconditions are met), the agent needs to converse directly with the user across different states, or you're building multi-stage conversational flows. This pattern is particularly valuable for customer support scenarios where you need to collect information in a specific sequence—for example, collecting a warranty ID before processing a refund.
 
 ## Basic implementation
 
@@ -342,14 +342,14 @@ const transferToSupport = tool(
 
 // 3. Create agents with handoff tools
 const salesAgent = createAgent({
-  model: "anthropic:claude-sonnet-4-20250514",
+  model: "google_genai:gemini-3.6-flash",
   tools: [transferToSupport],
   systemPrompt:
     "You are a sales agent. Help with sales inquiries. If asked about technical issues or support, transfer to the support agent.",
 });
 
 const supportAgent = createAgent({
-  model: "anthropic:claude-sonnet-4-20250514",
+  model: "google_genai:gemini-3.6-flash",
   tools: [transferToSales],
   systemPrompt:
     "You are a support agent. Help with technical issues. If asked about pricing or purchasing, transfer to the sales agent.",
@@ -367,10 +367,7 @@ const callSupportAgent: GraphNode<typeof MultiAgentState.State> = async (state) 
 };
 
 // 5. Create router that checks if we should end or continue
-const routeAfterAgent: ConditionalEdgeRouter<
-  typeof MultiAgentState.State,
-  "sales_agent" | "support_agent"
-> = (state) => {
+const routeAfterAgent: ConditionalEdgeRouter<{ InputSchema: typeof MultiAgentState.State; Nodes: "sales_agent" | "support_agent" }> = (state) => {
   const messages = state.messages ?? [];
 
   // Check the last message - if it's an AIMessage without tool calls, we're done
@@ -386,10 +383,7 @@ const routeAfterAgent: ConditionalEdgeRouter<
   return active as "sales_agent" | "support_agent";
 };
 
-const routeInitial: ConditionalEdgeRouter<
-  typeof MultiAgentState.State,
-  "sales_agent" | "support_agent"
-> = (state) => {
+const routeInitial: ConditionalEdgeRouter<{ InputSchema: typeof MultiAgentState.State; Nodes: "sales_agent" | "support_agent" }> = (state) => {
   // Route to the active agent based on state, default to sales agent
   return (state.activeAgent ?? "sales_agent") as
     | "sales_agent"
@@ -505,9 +499,11 @@ As you design your multi-agent system, consider:
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langchain/multi-agent/handoffs.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

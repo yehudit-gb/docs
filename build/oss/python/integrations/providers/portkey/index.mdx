@@ -18,7 +18,7 @@ Portkey brings production readiness to LangChain. With Portkey, you can
 
 ## Quickstart - portkey & LangChain
 
-Since Portkey is fully compatible with the OpenAI signature, you can connect to the Portkey AI Gateway through the [`ChatOpenAI`](https://reference.langchain.com/python/integrations/langchain_openai/ChatOpenAI) interface.
+Since Portkey is fully compatible with the OpenAI signature, you can connect to the Portkey AI Gateway through the [`ChatOpenAI`](https://reference.langchain.com/python/langchain-openai/chat_models/base/ChatOpenAI) interface.
 
 - Set the `base_url` as `PORTKEY_GATEWAY_URL`
 - Add `default_headers` to consume the headers needed by Portkey using the `createHeaders` helper method.
@@ -31,7 +31,7 @@ Next, install the Portkey SDK
 pip install -U portkey_ai
 ```
 
-We can now connect to the Portkey AI Gateway by updating the [`ChatOpenAI`](https://reference.langchain.com/python/integrations/langchain_openai/ChatOpenAI) model in LangChain
+We can now connect to the Portkey AI Gateway by updating the [`ChatOpenAI`](https://reference.langchain.com/python/langchain-openai/chat_models/base/ChatOpenAI) model in LangChain
 
 ```python
 from langchain_openai import ChatOpenAI
@@ -55,7 +55,7 @@ The request is routed through your Portkey AI Gateway to the specified `provider
 
 The power of the AI gateway comes when you're able to use the above code snippet to connect with 150+ models across 20+ providers supported through the AI gateway.
 
-Let's modify the code above to make a call to Anthropic's `claude-3-opus-20240229` model.
+Let's modify the code above to make a call to Anthropic's `claude-opus-4-8` model.
 
 Portkey supports **[Virtual Keys](https://docs.portkey.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys)** which are an easy way to store and manage API keys in a secure vault. Let's try using a Virtual Key to make LLM calls. You can navigate to the Virtual Keys tab in Portkey and create a new key for Anthropic.
 
@@ -72,14 +72,14 @@ VIRTUAL_KEY = "..." # Anthropic's virtual key we copied above
 
 portkey_headers = createHeaders(api_key=PORTKEY_API_KEY,virtual_key=VIRTUAL_KEY)
 
-llm = ChatOpenAI(api_key="X", base_url=PORTKEY_GATEWAY_URL, default_headers=portkey_headers, model="claude-3-opus-20240229")
+llm = ChatOpenAI(api_key="X", base_url=PORTKEY_GATEWAY_URL, default_headers=portkey_headers, model="claude-opus-4-8")
 
 llm.invoke("What is the meaning of life, universe and everything?")
 ```
 
 The Portkey AI gateway will authenticate the API request to Anthropic and get the response back in the OpenAI format for you to consume.
 
-The AI gateway extends LangChain's [`ChatOpenAI`](https://reference.langchain.com/python/integrations/langchain_openai/ChatOpenAI) class making it a single interface to call any provider and any model.
+The AI gateway extends LangChain's [`ChatOpenAI`](https://reference.langchain.com/python/langchain-openai/chat_models/base/ChatOpenAI) class making it a single interface to call any provider and any model.
 
 ## Advanced routing - load balancing, fallbacks, retries
 
@@ -98,7 +98,7 @@ config = {
         "weight": 0.5
     }, {
         "virtual_key": "anthropic-25654", # Anthropic's virtual key
-        "override_params": {"model": "claude-3-opus-20240229"},
+        "override_params": {"model": "claude-opus-4-8"},
         "weight": 0.5
     }]
 }
@@ -117,15 +117,15 @@ llm = ChatOpenAI(api_key="X", base_url=PORTKEY_GATEWAY_URL, default_headers=port
 llm.invoke("What is the meaning of life, universe and everything?")
 ```
 
-When the LLM is invoked, Portkey will distribute the requests to `gpt-4` and `claude-3-opus-20240229` in the ratio of the defined weights.
+When the LLM is invoked, Portkey will distribute the requests to `gpt-4` and `claude-opus-4-8` in the ratio of the defined weights.
 
-You can find more config examples [here](https://docs.portkey.ai/docs/api-reference/config-object#examples).
+You can find more [Portkey config examples](https://docs.portkey.ai/docs/api-reference/config-object#examples).
 
 ## **Tracing chains & agents**
 
 Portkey's LangChain integration gives you full visibility into the running of an agent. Let's take an example of a [popular agentic workflow](https://python.langchain.com/docs/use_cases/tool_use/quickstart/#agents).
 
-We only need to modify the [`ChatOpenAI`](https://reference.langchain.com/python/integrations/langchain_openai/ChatOpenAI) class to use the AI Gateway as above.
+We only need to modify the [`ChatOpenAI`](https://reference.langchain.com/python/langchain-openai/chat_models/base/ChatOpenAI) class to use the AI Gateway as above.
 
 ```python
 from langchain_classic import hub
@@ -184,9 +184,11 @@ For detailed information on each feature and how to use it, [please refer to the
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/python/integrations/providers/portkey/index.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

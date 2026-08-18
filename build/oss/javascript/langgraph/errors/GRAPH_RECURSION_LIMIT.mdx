@@ -2,7 +2,7 @@
 title: GRAPH_RECURSION_LIMIT
 ---
 
-Your LangGraph [`StateGraph`](https://langchain-ai.github.io/langgraph/reference/graphs/#langgraph.graph.state.StateGraph) reached the maximum number of steps before hitting a stop condition.
+Your LangGraph [`StateGraph`](https://reference.langchain.com/javascript/langchain-langgraph/index/StateGraph) reached the maximum number of steps before hitting a stop condition.
 This is often due to an infinite loop caused by code like the example below:
 
 
@@ -37,14 +37,16 @@ However, complex graphs may hit the default limit naturally.
 * If you have a complex graph, you can pass in a higher `recursionLimit` value into your `config` object when invoking your graph like this:
 
 ```typescript
-await graph.invoke({...}, { recursionLimit: 100 });
+await graph.invoke({...}, { recursionLimit: 1000 });
 ```
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langgraph/errors/GRAPH_RECURSION_LIMIT.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

@@ -89,7 +89,7 @@ from langchain_redis import RedisCache
 
 To use this cache with your LLMs:
 ```python
-from langchain.globals import set_llm_cache
+from langchain_core.globals import set_llm_cache
 import redis
 
 redis_client = redis.Redis.from_url(...)
@@ -105,7 +105,7 @@ from langchain_redis import RedisSemanticCache
 
 To use this cache with your LLMs:
 ```python
-from langchain.globals import set_llm_cache
+from langchain_core.globals import set_llm_cache
 import redis
 
 # use any embedding provider...
@@ -119,13 +119,15 @@ set_llm_cache(RedisSemanticCache(
 ))
 ```
 
-## VectorStore
+## Vector store
 
-The vectorstore wrapper turns Redis into a low-latency [vector database](https://redis.com/solutions/use-cases/vector-database/) for semantic search or LLM content retrieval.
+Redis includes a vector store integration for low-latency retrieval, metadata filtering, MMR, and hybrid full-text and vector search.
 
 ```python
-from langchain_community.vectorstores import Redis
+from langchain_redis import RedisVectorStore
 ```
+
+For a detailed walkthrough, see the [Redis vector store integration guide](/oss/python/integrations/vectorstores/redis).
 
 ## Retriever
 
@@ -135,9 +137,11 @@ call `.as_retriever()` on the base vectorstore class.
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/python/integrations/providers/redis.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

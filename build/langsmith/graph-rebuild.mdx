@@ -46,7 +46,7 @@ graph_workflow.add_edge(START, "model")
 agent = graph_workflow.compile()
 ```
 
-To make the server aware of your graph, you need to specify a path to the variable that contains the [`CompiledStateGraph`](https://reference.langchain.com/python/langgraph/graphs/#langgraph.graph.state.CompiledStateGraph) instance in your LangGraph API configuration (`langgraph.json`), e.g.:
+To make the server aware of your graph, you need to specify a path to the variable that contains the [`CompiledStateGraph`](https://reference.langchain.com/python/langgraph/graph/state/CompiledStateGraph) instance in your LangGraph API configuration (`langgraph.json`), e.g.:
 
 ```json
 {
@@ -63,7 +63,7 @@ To make the server aware of your graph, you need to specify a path to the variab
 To rebuild your graph on each new run, provide a **factory function** that returns (or yields) a graph. The factory can optionally accept a `ServerRuntime` parameter or a `RunnableConfig`. The server inspects your function's type annotations to determine which arguments to inject, so make sure to include the correct type hints. The server's queue workers will call your factory function any time they need to process a run. The function will also be called for certain other endpoints to update state, read state, or to fetch assistant schemas. The `ServerRuntime` tells you which context triggered the call.
 
 <Note>
-`ServerRuntime` is in beta and may change in future releases.
+`ServerRuntime` is in [beta](/langsmith/release-stages) and may change in future releases.
 </Note>
 
 #### Simple factory
@@ -78,7 +78,7 @@ from langgraph_sdk.runtime import ServerRuntime
 
 from my_agent.utils.state import AgentState
 
-model = ChatOpenAI(model="gpt-5.2")
+model = ChatOpenAI(model="gpt-5.5")
 
 
 def make_graph_for_user(user_id: str):
@@ -112,7 +112,7 @@ from langgraph_sdk.runtime import ServerRuntime
 
 from my_agent.utils.state import AgentState
 
-model = ChatOpenAI(model="gpt-5.2")
+model = ChatOpenAI(model="gpt-5.5")
 
 
 def make_agent_graph(tools: list):
@@ -182,13 +182,19 @@ The server calls your factory in several contexts beyond just executing runs. In
 | `threads.read` | State reads via `aget_state` / `aget_state_history`. |
 | `assistants.read` | Schema and graph introspection for visualization, MCP, A2A, etc. |
 
-See more info on LangGraph API configuration file [here](/langsmith/cli#configuration-file).
+## Customize tracing per graph
+
+You can use the factory function to customize or disable tracing for a specific graph. See [Conditional tracing: Customize tracing in deployed agents](/langsmith/conditional-tracing#customize-tracing-in-deployed-agents) for examples.
+
+See more info on the [LangGraph API configuration file](/langsmith/cli#configuration-file).
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/langsmith/graph-rebuild.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

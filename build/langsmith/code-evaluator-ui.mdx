@@ -3,16 +3,16 @@ title: How to define a code evaluator
 sidebarTitle: Code evaluator
 ---
 
-Code evaluators in the [LangSmith UI](https://smith.langchain.com) allow you to write custom evaluation logic using Python or TypeScript code directly in the interface. Unlike [LLM-as-a-judge](/langsmith/llm-as-judge) evaluators that use a model to evaluate outputs, code evaluators use deterministic logic you define.
+Code evaluators in the [LangSmith UI](https://smith.langchain.com?utm_source=docs&utm_medium=cta&utm_campaign=langsmith-signup&utm_content=langsmith-code-evaluator-ui) allow you to write custom evaluation logic using Python or TypeScript code directly in the interface. Unlike [LLM-as-a-judge](/langsmith/llm-as-judge) evaluators that use a model to evaluate outputs, code evaluators use deterministic logic you define.
 
 <Note>
-To define code evaluators programmatically using the SDK, refer to [How to define a code evaluator (SDK)](/langsmith/code-evaluator-sdk).
+To create a code evaluator that appears in the LangSmith UI programmatically, refer to [Manage evaluators with the SDK](/langsmith/manage-evaluators-sdk). To define a code evaluator function that you pass to `evaluate()`, refer to [How to define a code evaluator (SDK)](/langsmith/code-evaluator-sdk). To grade outputs against assertions saved on dataset examples, refer to [Use assertions](/langsmith/assertions).
 </Note>
 
 ## Step 1. Create the evaluator
 
-1. Create an evaluator from one of the following pages in the [LangSmith UI](https://smith.langchain.com):
-    - In the playground or from a dataset: Select the **+ Evaluator** button.
+1. Create an evaluator from one of the following pages in the [LangSmith UI](https://smith.langchain.com?utm_source=docs&utm_medium=cta&utm_campaign=langsmith-signup&utm_content=langsmith-code-evaluator-ui):
+    - In the Playground or from a dataset: Select the **+ Evaluator** button.
     - Select **Add rules**, configure your rule and select **Apply evaluator**.
 1. Give your evaluator a clear name that describes what it measures (e.g., "Exact Match").
 1. Select **Create code evaluator** from the evaluator type options.
@@ -92,7 +92,7 @@ def perform_eval(run, example):
 
 Once created, you can use your code evaluator:
 
-- When running evaluations from the [playground](/langsmith/observability-concepts#prompt-playground)
+- When running evaluations from the [Playground](/langsmith/prompt-engineering-concepts#playground)
 - As part of a dataset to [automatically run evaluations on experiments](/langsmith/bind-evaluator-to-dataset)
 
 ## Related
@@ -102,9 +102,11 @@ Once created, you can use your code evaluator:
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/langsmith/code-evaluator-ui.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

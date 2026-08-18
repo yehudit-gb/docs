@@ -49,8 +49,6 @@ output = embedding.embed_query(document)
 ```
 
 
-
-
 ## Embed query with apple silicon (M1,M2,etc..):
 
 ```python
@@ -58,7 +56,6 @@ documents = ["foo bar", 'bar foo']
 embedding = JohnSnowLabsEmbeddings('embed_sentence.bert','apple_silicon')
 output = embedding.embed_query(document)
 ```
-
 
 
 ## Embed query with AARCH:
@@ -70,17 +67,12 @@ output = embedding.embed_query(document)
 ```
 
 
-
-
-
-
 ## Embed document with CPU:
 ```python
 documents = ["foo bar", 'bar foo']
 embedding = JohnSnowLabsEmbeddings('embed_sentence.bert','gpu')
 output = embedding.embed_documents(documents)
 ```
-
 
 
 ## Embed document with GPU:
@@ -90,9 +82,6 @@ documents = ["foo bar", 'bar foo']
 embedding = JohnSnowLabsEmbeddings('embed_sentence.bert','gpu')
 output = embedding.embed_documents(documents)
 ```
-
-
-
 
 
 ## Embed document with apple silicon (M1,M2,etc..):
@@ -105,7 +94,6 @@ output = embedding.embed_documents(documents)
 ```
 
 
-
 ## Embed Document with AARCH:
 
 ```python
@@ -116,15 +104,15 @@ output = embedding.embed_documents(documents)
 ```
 
 
-
-
 Models are loaded with [nlp.load](https://nlp.johnsnowlabs.com/docs/en/jsl/load_api) and spark session is started with [nlp.start()](https://nlp.johnsnowlabs.com/docs/en/jsl/start-a-sparksession) under the hood.
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/python/integrations/providers/johnsnowlabs.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

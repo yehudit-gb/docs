@@ -1,7 +1,12 @@
 ---
-title: "Google drive integration"
-description: "Integrate with the Google drive retriever using LangChain Python."
+title: Google drive integration
+description: Integrate with the Google drive retriever using LangChain Python.
+integration:
+  name: Google drive
+  pypi: langchain-google-community
 ---
+
+
 
 This notebook covers how to retrieve documents from `Google Drive`.
 
@@ -60,7 +65,7 @@ By default, all files with these MIME types can be converted to `Document`.
 
 It's possible to update or customize this. See the documentation of `GoogleDriveRetriever`.
 
-But, the corresponding packages must be installed.
+The corresponding packages must be installed.
 
 ```python
 pip install -qU  unstructured
@@ -138,9 +143,11 @@ retriever.invoke("machine learning")
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/python/integrations/retrievers/google_drive.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

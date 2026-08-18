@@ -60,7 +60,7 @@ uv add langchain-elasticsearch
 
 ## Embedding models
 
-See a [usage example](/oss/python/integrations/text_embedding/elasticsearch).
+See a [usage example](/oss/python/integrations/embeddings/elasticsearch).
 
 ```python
 from langchain_elasticsearch import ElasticsearchEmbeddings
@@ -74,14 +74,6 @@ See a [usage example](/oss/python/integrations/vectorstores/elasticsearch).
 from langchain_elasticsearch import ElasticsearchStore
 ```
 
-### Third-party integrations
-
-#### EcloudESVectorStore
-
-```python
-from langchain_community.vectorstores.ecloud_vector_search import EcloudESVectorStore
-```
-
 ## Retrievers
 
 ### ElasticsearchRetriever
@@ -93,14 +85,6 @@ See a [usage example](/oss/python/integrations/retrievers/elasticsearch_retrieve
 
 ```python
 from langchain_elasticsearch import ElasticsearchRetriever
-```
-
-### BM25
-
-See a [usage example](/oss/python/integrations/retrievers/elastic_search_bm25).
-
-```python
-from langchain_community.retrievers import ElasticSearchBM25Retriever
 ```
 
 ## LLM cache
@@ -127,9 +111,11 @@ from langchain_classic.chains.elasticsearch_database import ElasticsearchDatabas
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/python/integrations/providers/elasticsearch.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

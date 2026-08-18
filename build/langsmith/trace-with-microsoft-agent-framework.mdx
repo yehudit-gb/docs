@@ -66,15 +66,17 @@ agent = ChatAgent(
     chat_client=OpenAIChatClient(model_id="gpt-4o"),
 )
 
-result = await agent.run("What's the the capital of Bavaria?")
+result = await agent.run("What's the capital of Bavaria?")
 print(result.text)
 ```
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/langsmith/trace-with-microsoft-agent-framework.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

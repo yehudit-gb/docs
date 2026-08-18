@@ -1,7 +1,13 @@
 ---
-title: "Neo4j vector index integration"
-description: "Integrate with the Neo4j vector index vector store using LangChain Python."
+title: Neo4j vector index integration
+description: Integrate with the Neo4j vector index vector store using LangChain Python.
+integration:
+  name: Neo4j vector index
+  pypi: langchain-neo4j
 ---
+
+
+import LangchainCommunityUnmaintained from '/snippets/python/oss/langchain-community-unmaintained.mdx';
 
 >[Neo4j](https://neo4j.com/) is an open-source graph database with integrated support for vector similarity search
 
@@ -35,6 +41,8 @@ if "OPENAI_API_KEY" not in os.environ:
 ```text
 OpenAI API Key: ········
 ```
+
+<LangchainCommunityUnmaintained />
 
 ```python
 from langchain_community.document_loaders import TextLoader
@@ -457,9 +465,11 @@ chain.invoke(
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/python/integrations/vectorstores/neo4jvector.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

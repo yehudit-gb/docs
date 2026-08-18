@@ -1,6 +1,10 @@
 ---
-title: "Azure database for postgresql - flexible server integration"
-description: "Integrate with the Azure database for postgresql - flexible server vector store using LangChain Python."
+title: Azure database for postgresql - flexible server integration
+description: Integrate with the Azure database for postgresql - flexible server vector
+  store using LangChain Python.
+integration:
+  name: Azure database for postgresql - flexible server
+  pypi: langchain-azure-postgresql
 ---
 
 [Azure Database for PostgreSQL - Flexible Server](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/service-overview) is a relational database service based on the open-source Postgres database engine. It's a fully managed database-as-a-service that can handle mission-critical workloads with predictable performance, security, high availability, and dynamic scalability.
@@ -443,19 +447,21 @@ For a full list of the different searches you can execute on a `AzurePGVectorSto
 
 For guides on how to use this vector store for retrieval-augmented generation (RAG), see the following sections:
 
-* [Tutorials: working with external knowledge](https://python.langchain.com/docs/tutorials/#working-with-external-knowledge)
-* [How-to: Question and answer with RAG](https://python.langchain.com/docs/how_to/#qa-with-rag)
-* [Retrieval conceptual docs](https://python.langchain.com/docs/concepts/#retrieval)
+- [Retrieval docs](/oss/python/deepagents/retrieval)
+- [Build a RAG app with LangChain](/oss/python/deepagents/rag)
+- [Agentic RAG](/oss/python/langgraph/agentic-rag)
 
 ## API reference
 
-For detailed documentation of all AzurePGVectorStore features and configurations head to the API reference: https://github.com/langchain-ai/langchain-azure/tree/main/libs/azure-postgresql/src/langchain_azure_postgresql/langchain
+For detailed documentation of all `AzurePGVectorStore` features and configurations head to the API reference: https://github.com/langchain-ai/langchain-azure/tree/main/libs/azure-postgresql/src/langchain_azure_postgresql/langchain
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/python/integrations/vectorstores/azure_db_for_postgresql.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

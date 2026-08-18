@@ -12,8 +12,8 @@ This pages describes how to set up Studio with your local LangChain agent.
 
 Before you begin, ensure you have the following:
 
-- **A LangSmith account**: Sign up (for free) or log in at [smith.langchain.com](https://smith.langchain.com).
-- **A LangSmith API key**: Follow the [Create an API key](/langsmith/create-account-api-key#create-an-api-key) guide.
+- **A LangSmith account**: Sign up (for free) or log in at [smith.langchain.com](https://smith.langchain.com?utm_source=docs&utm_medium=cta&utm_campaign=langsmith-signup&utm_content=oss-langgraph-studio).
+- **A LangSmith API key**: Follow the [Create an API key](/langsmith/create-account-api-key) guide.
 - If you don't want data [traced](/langsmith/observability-concepts#traces) to LangSmith, set `LANGSMITH_TRACING=false` in your application's `.env` file. With tracing disabled, no data leaves your local server.
 
 ## Set up local Agent server
@@ -51,7 +51,7 @@ function sendEmail(to: string, subject: string, body: string): string {
 }
 
 const agent = createAgent({
-    model: "gpt-4.1",
+    model: "gpt-5.5",
     tools: [sendEmail],
     systemPrompt: "You are an email assistant. Always use the sendEmail tool.",
 });
@@ -91,7 +91,7 @@ The LangGraph CLI uses a configuration file to locate your agent and manage depe
 
 
 
-The [`createAgent`](https://reference.langchain.com/javascript/functions/langchain.index.createAgent.html) function automatically returns a compiled LangGraph graph, which is what the `graphs` key expects in the configuration file.
+The [`createAgent`](https://reference.langchain.com/javascript/langchain/index/createAgent) function automatically returns a compiled LangGraph graph, which is what the `graphs` key expects in the configuration file.
 
 
 <Info>
@@ -142,11 +142,11 @@ Once the server is running, your agent is accessible both via API at `http://127
 ![Agent view in the Studio UI](/oss/images/studio_create-agent.png)
 </Frame>
 
-With Studio connected to your local agent, you can iterate quickly on your agent's behavior. Run a test input, inspect the full execution trace including prompts, tool arguments, return values, and token/latency metrics. When something goes wrong, Studio captures exceptions with the surrounding state to help you understand what happened.
+With Studio connected to your local agent, you can iterate quickly on your agent's behavior. Run a test input, inspect the full execution trace including prompts, tool arguments, return values, and token/latency metrics in [LangSmith](/langsmith/observability-studio). When something goes wrong, Studio captures exceptions with the surrounding state to help you understand what happened.
 
 The development server supports hot-reloading—make changes to prompts or tool signatures in your code, and Studio reflects them immediately. Re-run conversation threads from any step to test your changes without starting over. This workflow scales from simple single-tool agents to complex multi-node graphs.
 
-For more information on how to run Studio, refer to the following guides in the [LangSmith docs](/langsmith/home):
+For more information on how to run Studio, refer to the following guides in the [LangSmith docs](/langsmith/observability):
 
 - [Run application](/langsmith/use-studio#run-application)
 - [Manage assistants](/langsmith/use-studio#manage-assistants)
@@ -170,9 +170,11 @@ For more information on how to run Studio, refer to the following guides in the 
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langgraph/studio.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

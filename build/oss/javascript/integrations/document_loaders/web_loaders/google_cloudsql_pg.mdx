@@ -1,6 +1,10 @@
 ---
-title: "Google cloud SQL for postgresql integration"
-description: "Integrate with the Google cloud SQL for postgresql document loader using LangChain JavaScript."
+title: Google cloud SQL for postgresql integration
+description: Integrate with the Google cloud SQL for postgresql document loader using
+  LangChain JavaScript.
+integration:
+  name: Google cloud SQL for postgresql
+  npm: '@langchain/google-cloud-sql-pg'
 ---
 
 [Cloud SQL](https://cloud.google.com/sql) is a fully managed relational database service that offers high
@@ -42,8 +46,19 @@ If you don't know your project ID, try the following:
 
 ## Setting up a PostgresLoader instance
 
-To use the PostgresLoader class, you'll need to install the `@langchain/google-cloud-sql-pg`
-package and then follow the steps bellow.
+To use the PostgresLoader class, you'll need to install the `@langchain/google-cloud-sql-pg` package and then follow the steps below.
+
+<CodeGroup>
+```bash npm
+npm install @langchain/google-cloud-sql-pg @langchain/core
+```
+```bash yarn
+yarn add @langchain/google-cloud-sql-pg @langchain/core
+```
+```bash pnpm
+pnpm add @langchain/google-cloud-sql-pg @langchain/core
+```
+</CodeGroup>
 
 First, you'll need to log in to your Google Cloud account and set the following environment variables based
 on your Google Cloud project; these will be defined based on how you want to configure (fromInstance,
@@ -68,6 +83,7 @@ import {
   PostgresLoader,
   PostgresEngine,
   PostgresEngineArgs,
+  type PostgresLoaderOptions,
 } from "@langchain/google-cloud-sql-pg";
 import * as dotenv from "dotenv";
 
@@ -106,7 +122,7 @@ const documentLoaderArgs: PostgresLoaderOptions = {
 };
 
 const documentLoaderInstance = await PostgresLoader.initialize(
-  PEInstance,
+  engine,
   documentLoaderArgs
 );
 ```
@@ -129,8 +145,8 @@ const documentLoaderArgs: PostgresLoaderOptions = {
 };
 
 const documentLoaderInstance = await PostgresLoader.initialize(
-  PEInstance,
-  docucumetLoaderArgs
+  engine,
+  documentLoaderArgs
 );
 ```
 
@@ -140,9 +156,11 @@ The loader returns a list of Documents, with one document per row, with page con
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/javascript/integrations/document_loaders/web_loaders/google_cloudsql_pg.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

@@ -2,13 +2,23 @@
 title: Interrupts
 ---
 
-
+import LanggraphInterruptsResumeV2Py from '/snippets/javascript/code-samples/langgraph-interrupts-resume-v2-py.mdx';
+import LanggraphInterruptsMultiplePy from '/snippets/javascript/code-samples/langgraph-interrupts-multiple-py.mdx';
+import LanggraphInterruptsHitlStreamPy from '/snippets/javascript/code-samples/langgraph-interrupts-hitl-stream-py.mdx';
+import LanggraphInterruptsHitlStreamJs from '/snippets/javascript/code-samples/langgraph-interrupts-hitl-stream-js.mdx';
+import LanggraphInterruptsApprovalPy from '/snippets/javascript/code-samples/langgraph-interrupts-approval-py.mdx';
+import LanggraphInterruptsReviewPy from '/snippets/javascript/code-samples/langgraph-interrupts-review-py.mdx';
+import LanggraphInterruptsValidatePy from '/snippets/javascript/code-samples/langgraph-interrupts-validate-py.mdx';
+import LanggraphInterruptsValidateConditionalEdgePatternPy from '/snippets/javascript/code-samples/langgraph-interrupts-validate-conditional-edge-pattern-py.mdx';
+import LanggraphInterruptsValidateConditionalEdgePatternJs from '/snippets/javascript/code-samples/langgraph-interrupts-validate-conditional-edge-pattern-js.mdx';
+import LanggraphInterruptsValidateConditionalEdgeJs from '/snippets/javascript/code-samples/langgraph-interrupts-validate-conditional-edge-js.mdx';
+import LanggraphInterruptsValidateConditionalEdgePy from '/snippets/javascript/code-samples/langgraph-interrupts-validate-conditional-edge-py.mdx';
 
 Interrupts allow you to pause graph execution at specific points and wait for external input before continuing. This enables human-in-the-loop patterns where you need external input to proceed. When an interrupt is triggered, LangGraph saves the graph state using its [persistence](/oss/javascript/langgraph/persistence) layer and waits indefinitely until you resume execution.
 
 Interrupts work by calling the `interrupt()` function at any point in your graph nodes. The function accepts any JSON-serializable value which is surfaced to the caller. When you're ready to continue, you resume execution by re-invoking the graph using `Command`, which then becomes the return value of the `interrupt()` call from inside the node.
 
-Unlike static breakpoints (which pause before or after specific nodes), interrupts are **dynamic**—they can be placed anywhere in your code and can be conditional based on your application logic.
+Unlike static breakpoints (which pause before or after specific nodes), interrupts are **dynamic**: they can be placed anywhere in your code and can be conditional based on your application logic.
 
 
 - **Checkpointing keeps your place:** the checkpointer writes the exact graph state so you can resume later, even when in an error state.
@@ -20,9 +30,9 @@ The `thread_id` you choose is effectively your persistent cursor. Reusing it res
 
 ## Pause using `interrupt`
 
-The [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html) function pauses graph execution and returns a value to the caller. When you call [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html) within a node, LangGraph saves the current graph state and waits for you to resume execution with input.
+The [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) function pauses graph execution and returns a value to the caller. When you call [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) within a node, LangGraph saves the current graph state and waits for you to resume execution with input.
 
-To use [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html), you need:
+To use [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt), you need:
 1. A **checkpointer** to persist the graph state (use a durable checkpointer in production)
 2. A **thread ID** in your config so the runtime knows which state to resume from
 3. To call `interrupt()` where you want to pause (payload must be JSON-serializable)
@@ -42,11 +52,13 @@ async function approvalNode(state: State) {
 ```
 
 
-When you call [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html), here's what happens:
+When you call [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt), here's what happens:
 
-1. **Graph execution gets suspended** at the exact point where [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html) is called
+1. **Graph execution gets suspended** at the exact point where [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) is called
 2. **State is saved** using the checkpointer so execution can be resumed later, In production, this should be a persistent checkpointer (e.g. backed by a database)
+
 3. **Value is returned** to the caller under `__interrupt__`; it can be any JSON-serializable value (string, object, array, etc.)
+
 4. **Graph waits indefinitely** until you resume execution with a response
 5. **Response is passed back** into the node when you resume, becoming the return value of the `interrupt()` call
 
@@ -77,9 +89,16 @@ await graph.invoke(new Command({ resume: true }), config);
 **Key points about resuming:**
 
 - You must use the **same thread ID** when resuming that was used when the interrupt occurred
-- The value passed to `new Command({ resume: ... })` becomes the return value of the [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html) call
-- The node restarts from the beginning of the node where the [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html) was called when resumed, so any code before the [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html) runs again
+- The value passed to `new Command({ resume: ... })` becomes the return value of the [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) call
+- The node restarts from the beginning of the node where the [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) was called when resumed, so any code before the [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) runs again
 - You can pass any JSON-serializable value as the resume value
+
+<Warning>
+
+`new Command({ resume: ... })` is the **only** `Command` pattern intended as input to `invoke()`/`stream()`/`stream_events()`. The other `Command` parameters (`update`, `goto`, `graph`) are designed for [returning from node functions](/oss/javascript/langgraph/graph-api#command). Do not pass `new Command({ update: ... })` as input to continue multi-turn conversations—pass a plain input object instead.
+
+</Warning>
+
 
 
 ## Common patterns
@@ -87,55 +106,113 @@ await graph.invoke(new Command({ resume: true }), config);
 The key thing that interrupts unlock is the ability to pause execution and wait for external input. This is useful for a variety of use cases, including:
 
 - <Icon icon="circle-check" /> [Approval workflows](#approve-or-reject): Pause before executing critical actions (API calls, database changes, financial transactions)
+- <Icon icon="link" /> [Handling multiple interrupts](#handling-multiple-interrupts): Pair interrupt IDs with resume values when resuming multiple interrupts in a single invocation
 - <Icon icon="pencil" /> [Review and edit](#review-and-edit-state): Let humans review and modify LLM outputs or tool calls before continuing
 - <Icon icon="tool" /> [Interrupting tool calls](#interrupts-in-tools): Pause before executing tool calls to review and edit the tool call before execution
 - <Icon icon="shield-check" /> [Validating human input](#validating-human-input): Pause before proceeding to the next step to validate human input
 
 ### Stream with human-in-the-loop (HITL) interrupts
 
-When building interactive agents with human-in-the-loop workflows, you can stream both message chunks and node updates simultaneously to provide real-time feedback while handling interrupts.
+When building interactive agents with human-in-the-loop workflows, you can use [event streaming](/oss/javascript/langgraph/event-streaming) to consume message chunks and state snapshots concurrently while handling interrupts.
 
-Use multiple stream modes (`"messages"` and `"updates"`) with `subgraphs=True` (if subgraphs are present) to:
-- Stream AI responses in real-time as they're generated
-- Detect when the graph encounters an interrupt
-- Handle user input and resume execution seamlessly
+Use the typed projections returned by `graph.stream_events(..., version="v3")` in a loop until the run finishes:
+- Stream AI responses token-by-token via `stream.messages`
+- Observe per-step state snapshots via `stream.values`
+- Detect interrupts via `stream.interrupted` and read their payloads from `stream.interrupts`
+- Resume execution by calling `stream_events` again with `Command(resume=...)` and repeat until `stream.interrupted` is false
 
-```python
-async for metadata, mode, chunk in graph.astream(
-    initial_input,
-    stream_mode=["messages", "updates"],
-    subgraphs=True,
-    config=config
-):
-    if mode == "messages":
-        # Handle streaming message content
-        msg, _ = chunk
-        if isinstance(msg, AIMessageChunk) and msg.content:
-            # Display content in real-time
-            display_streaming_content(msg.content)
-    
-    elif mode == "updates":
-        # Check for interrupts
-        if "__interrupt__" in chunk:
-            # Stop streaming display
-            interrupt_info = chunk["__interrupt__"][0].value
-            
-            # Handle user input
-            user_response = get_user_input(interrupt_info)
-            
-            # Resume graph with updated input
-            initial_input = Command(resume=user_response)
-            break
-        
-        else:
-            # Track node transitions
-            current_node = list(chunk.keys())[0]
+
+
+<LanggraphInterruptsHitlStreamJs />
+
+- **`stream.messages`**: Chat-model output as content blocks; iterate `message.text` for token deltas. For nested subgraphs, read message chunks from `stream.subgraphs[*].messages`.
+- **`stream.values`**: Full state snapshots after each step
+- **`stream.interrupted` / `stream.interrupts`**: After each run, check whether the graph paused; read payloads from `stream.interrupts`
+- **`Command(resume=...)`**: Pass as the next `streamEvents` input to resume; loop until the run completes without interrupting
+
+
+### Handling multiple interrupts
+
+When parallel branches interrupt simultaneously (for example, fan-out to multiple nodes that each call `interrupt()`), you may need to resume multiple interrupts in a single invocation.
+When resuming multiple interrupts with a single invocation, map each interrupt ID to its resume value.
+This ensures each response is paired with the correct interrupt at runtime.
+
+
+
+```typescript
+import {
+  Annotation,
+  Command,
+  END,
+  INTERRUPT,
+  MemorySaver,
+  START,
+  StateGraph,
+  interrupt,
+  isInterrupted,
+} from "@langchain/langgraph";
+
+const State = Annotation.Root({
+  vals: Annotation<string[]>({
+    reducer: (left, right) =>
+      left.concat(Array.isArray(right) ? right : [right]),
+    default: () => [],
+  }),
+});
+
+function nodeA(_state: typeof State.State) {
+  const answer = interrupt("question_a") as string;
+  return { vals: [`a:${answer}`] };
+}
+
+function nodeB(_state: typeof State.State) {
+  const answer = interrupt("question_b") as string;
+  return { vals: [`b:${answer}`] };
+}
+
+const graph = new StateGraph(State)
+  .addNode("a", nodeA)
+  .addNode("b", nodeB)
+  .addEdge(START, "a")
+  .addEdge(START, "b")
+  .addEdge("a", END)
+  .addEdge("b", END)
+  .compile({ checkpointer: new MemorySaver() });
+
+const config = { configurable: { thread_id: "1" } };
+
+async function main() {
+  // Step 1: invoke - both parallel nodes hit interrupt() and pause
+  const interruptedResult = await graph.invoke({ vals: [] }, config);
+  console.log(interruptedResult);
+  /*
+  {
+    vals: [],
+    __interrupt__: [
+      { id: '...', value: 'question_a' },
+      { id: '...', value: 'question_b' }
+    ]
+  }
+  */
+
+  // Step 2: resume all pending interrupts at once
+  const resumeMap: Record<string, string> = {};
+  if (isInterrupted(interruptedResult)) {
+    for (const i of interruptedResult[INTERRUPT]) {
+      if (i.id != null) {
+        resumeMap[i.id] = `answer for ${i.value}`;
+      }
+    }
+  }
+  const result = await graph.invoke(new Command({ resume: resumeMap }), config);
+
+  console.log("Final state:", result);
+  //> Final state: { vals: ['a:answer for question_a', 'b:answer for question_b'] }
+}
+
+main().catch(console.error);
 ```
 
-- **`stream_mode=["messages", "updates"]`**: Enables dual streaming of both message chunks and graph state updates
-- **`subgraphs=True`**: Required for interrupt detection in nested graphs
-- **`"__interrupt__"` detection**: Signals when human input is needed
-- **`Command(resume=...)`**: Resumes graph execution with user-provided data
 
 ### Approve or reject
 
@@ -163,10 +240,9 @@ const approvalNode: typeof State.Node = (state) => {
 ```
 
 
+
+
 When you resume the graph, pass `true` to approve or `false` to reject:
-
-
-
 ```typescript
 // To approve
 await graph.invoke(new Command({ resume: true }), config);
@@ -319,7 +395,7 @@ await graph.invoke(
 
 You can also place interrupts directly inside tool functions. This makes the tool itself pause for approval whenever it's called, and allows for human review and editing of the tool call before it is executed.
 
-First, define a tool that uses [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html):
+First, define a tool that uses [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt):
 
 
 
@@ -413,7 +489,7 @@ This approach is useful when you want the approval logic to live with the tool i
       },
     );
 
-    const model = new ChatAnthropic({ model: "claude-sonnet-4-5-20250929" }).bindTools([sendEmailTool]);
+    const model = new ChatAnthropic({ model: "claude-sonnet-4-6" }).bindTools([sendEmailTool]);
 
     const State = new StateSchema({
       messages: MessagesValue,
@@ -459,33 +535,28 @@ This approach is useful when you want the approval logic to live with the tool i
 
 ### Validating human input
 
-Sometimes you need to validate input from humans and ask again if it's invalid. You can do this using multiple [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html) calls in a loop.
+Sometimes you need to validate input from humans and re-prompt if the value is invalid. The recommended approach is to call `interrupt()` **once per node invocation**, return from the node with the error message stored in state, and use a **conditional edge** to loop back to the node until a valid value is provided.
+
+<Warning>
+
+**Avoid `while True` + `interrupt()` loops inside a single node.** Because the node re-runs from the beginning on every resume (see [Rules of interrupts](#rules-of-interrupts)), a loop that calls `interrupt()` multiple times causes each resume to replay all previous iterations: the first resume replays 1 iteration, the second replays 2, and so on. The result is exponential re-execution of any code inside the loop body.
+
+</Warning>
 
 
 
-```typescript
-import { interrupt } from "@langchain/langgraph";
+The correct pattern:
 
-const getAgeNode: typeof State.Node = (state) => {
-  let prompt = "What is your age?";
+1. Store the re-prompt question in state (e.g. `pendingQuestion`).
+2. In the node, call `interrupt()` **exactly once**, passing the current question from state.
+3. If the answer is invalid, return the updated `pendingQuestion` so the next invocation re-prompts.
+4. Use `addConditionalEdges` to route back to the node until a valid value is collected.
 
-  while (true) {
-    const answer = interrupt(prompt); // payload surfaces in result.__interrupt__
+<LanggraphInterruptsValidateConditionalEdgePatternJs />
 
-    // Validate the input
-    if (typeof answer === "number" && answer > 0) {
-      // Valid input - continue
-      return { age: answer };
-    } else {
-      // Invalid input - ask again with a more specific prompt
-      prompt = `'${answer}' is not a valid age. Please enter a positive number.`;
-    }
-  }
-}
-```
+Each resume invokes `getAgeNode` exactly once, runs the `interrupt()` call once, and exits. When the answer is invalid, the conditional edge loops back and the next interrupt re-prompts with the updated question.
 
 
-Each time you resume the graph with invalid input, it will ask again with a clearer message. Once valid input is provided, the node completes and the graph continues.
 
 <Accordion title="Full example">
 
@@ -504,37 +575,36 @@ Each time you resume the graph with invalid input, it will ask again with a clea
 
     const State = new StateSchema({
       age: z.number().nullable(),
+      pendingQuestion: z.string().nullable(),
     });
 
     const builder = new StateGraph(State)
       .addNode("collectAge", (state) => {
-        let prompt = "What is your age?";
+        const question = state.pendingQuestion ?? "What is your age?";
+        const answer = interrupt(question); // called exactly once per invocation
 
-        while (true) {
-          const answer = interrupt(prompt); // payload surfaces in result.__interrupt__
-
-          if (typeof answer === "number" && answer > 0) {
-            return { age: answer };
-          }
-
-          prompt = `'${answer}' is not a valid age. Please enter a positive number.`;
+        if (typeof answer === "number" && answer > 0) {
+          return { age: answer, pendingQuestion: null };
         }
+        return { pendingQuestion: `'${answer}' is not a valid age. Please enter a positive number.` };
       })
       .addEdge(START, "collectAge")
-      .addEdge("collectAge", END);
+      .addConditionalEdges("collectAge", (state) =>
+        state.age !== null ? END : "collectAge"
+      );
 
     const checkpointer = new MemorySaver();
     const graph = builder.compile({ checkpointer });
 
     const config = { configurable: { thread_id: "form-1" } };
-    const first = await graph.invoke({ age: null }, config);
+    const first = await graph.invoke({ age: null, pendingQuestion: null }, config);
     console.log(first.__interrupt__); // -> [{ value: "What is your age?", ... }]
 
-    // Provide invalid data; the node re-prompts
+    // Provide invalid data; the node re-prompts via the conditional edge
     const retry = await graph.invoke(new Command({ resume: "thirty" }), config);
     console.log(retry.__interrupt__); // -> [{ value: "'thirty' is not a valid age...", ... }]
 
-    // Provide valid data; loop exits and state updates
+    // Provide valid data; route returns END and the graph finishes
     const final = await graph.invoke(new Command({ resume: 30 }), config);
     console.log(final.age); // -> 30
     ```
@@ -544,17 +614,17 @@ Each time you resume the graph with invalid input, it will ask again with a clea
 
 ## Rules of interrupts
 
-When you call [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html) within a node, LangGraph suspends execution by raising an exception that signals the runtime to pause. This exception propagates up through the call stack and is caught by the runtime, which notifies the graph to save the current state and wait for external input.
+When you call [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) within a node, LangGraph suspends execution by raising an exception that signals the runtime to pause. This exception propagates up through the call stack and is caught by the runtime, which notifies the graph to save the current state and wait for external input.
 
-When execution resumes (after you provide the requested input), the runtime restarts the entire node from the beginning—it does not resume from the exact line where [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html) was called. This means any code that ran before the [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html) will execute again. Because of this, there's a few important rules to follow when working with interrupts to ensure they behave as expected.
+When execution resumes (after you provide the requested input), the runtime restarts the entire node from the beginning—it does not resume from the exact line where [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) was called. This means any code that ran before the [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) will execute again. Because of this, there's a few important rules to follow when working with interrupts to ensure they behave as expected.
 
 
 
 ### Do not wrap `interrupt` calls in try/catch
 
-The way that [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html) pauses execution at the point of the call is by throwing a special exception. If you wrap the [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html) call in a try/catch block, you will catch this exception and the interrupt will not be passed back to the graph.
+The way that [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) pauses execution at the point of the call is by throwing a special exception. If you wrap the [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) call in a try/catch block, you will catch this exception and the interrupt will not be passed back to the graph.
 
-* ✅ Separate [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html) calls from error-prone code
+* ✅ Separate [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) calls from error-prone code
 * ✅ Conditionally catch errors if needed
 
 <CodeGroup>
@@ -589,7 +659,7 @@ const nodeA: GraphNode<typeof State> = async (state) => {
 ```
 </CodeGroup>
 
-* 🔴 Do not wrap [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html) calls in bare try/catch blocks
+* 🔴 Do not wrap [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) calls in bare try/catch blocks
 
 ```typescript
 async function nodeA(state: State) {
@@ -610,7 +680,7 @@ It's common to use multiple interrupts in a single node, however this can lead t
 
 When a node contains multiple interrupt calls, LangGraph keeps a list of resume values specific to the task executing the node. Whenever execution resumes, it starts at the beginning of the node. For each interrupt encountered, LangGraph checks if a matching value exists in the task's resume list. Matching is **strictly index-based**, so the order of interrupt calls within the node is important.
 
-* ✅ Keep [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html) calls consistent across node executions
+* ✅ Keep [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) calls consistent across node executions
 
 
 ```typescript
@@ -629,8 +699,8 @@ async function nodeA(state: State) {
 ```
 
 
-* 🔴 Do not conditionally skip [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html) calls within a node
-* 🔴 Do not loop [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html) calls using logic that isn't deterministic across executions
+* 🔴 Do not conditionally skip [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) calls within a node
+* 🔴 Do not loop [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) calls using logic that isn't deterministic across executions, including `while True` validation loops. Use a conditional edge instead (see [Validating human input](#validating-human-input))
 
 
 <CodeGroup>
@@ -670,7 +740,7 @@ const nodeA: GraphNode<typeof State> = async (state) => {
 
 Depending on which checkpointer is used, complex values may not be serializable (e.g. you can't serialize a function). To make your graphs adaptable to any deployment, it's best practice to only use values that can be reasonably serialized.
 
-* ✅ Pass simple, JSON-serializable types to [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html)
+* ✅ Pass simple, JSON-serializable types to [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt)
 * ✅ Pass dictionaries/objects with simple values
 
 
@@ -701,7 +771,7 @@ const nodeA: GraphNode<typeof State> = async (state) => {
 </CodeGroup>
 
 
-* 🔴 Do not pass functions, class instances, or other complex objects to [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html)
+* 🔴 Do not pass functions, class instances, or other complex objects to [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt)
 
 
 
@@ -743,12 +813,12 @@ const nodeA: GraphNode<typeof State> = async (state) => {
 
 ### Side effects called before `interrupt` must be idempotent
 
-Because interrupts work by re-running the nodes they were called from, side effects called before [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html) should (ideally) be idempotent. For context, idempotency means that the same operation can be applied multiple times without changing the result beyond the initial execution.
+Because interrupts work by re-running the nodes they were called from, side effects called before [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) should (ideally) be idempotent. For context, idempotency means that the same operation can be applied multiple times without changing the result beyond the initial execution.
 
-As an example, you might have an API call to update a record inside of a node. If [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html) is called after that call is made, it will be re-run multiple times when the node is resumed, potentially overwriting the initial update or creating duplicate records.
+As an example, you might have an API call to update a record inside of a node. If [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) is called after that call is made, it will be re-run multiple times when the node is resumed, potentially overwriting the initial update or creating duplicate records.
 
-* ✅ Use idempotent operations before [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html)
-* ✅ Place side effects after [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html) calls
+* ✅ Use idempotent operations before [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt)
+* ✅ Place side effects after [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) calls
 * ✅ Separate side effects into separate nodes when possible
 
 
@@ -808,7 +878,7 @@ const notificationNode: GraphNode<typeof State> = async (state) => {
 </CodeGroup>
 
 
-* 🔴 Do not perform non-idempotent operations before [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html)
+* 🔴 Do not perform non-idempotent operations before [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt)
 * 🔴 Do not create new records without checking if they exist
 
 
@@ -845,7 +915,7 @@ const nodeA: GraphNode<typeof State> = async (state) => {
 
 ## Using with subgraphs called as functions
 
-When invoking a subgraph within a node, the parent graph will resume execution from the **beginning of the node** where the subgraph was invoked and the [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html) was triggered. Similarly, the **subgraph** will also resume from the beginning of the node where [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html) was called.
+When invoking a subgraph within a node, the parent graph will resume execution from the **beginning of the node** where the subgraph was invoked and the [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) was triggered. Similarly, the **subgraph** will also resume from the beginning of the node where [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) was called.
 
 
 ```typescript
@@ -872,7 +942,7 @@ To debug and test a graph, you can use static interrupts as breakpoints to step 
 
 
 <Note>
-    Static interrupts are **not** recommended for human-in-the-loop workflows. Use the [`interrupt`](https://reference.langchain.com/javascript/functions/_langchain_langgraph.index.interrupt.html) function instead.
+    Static interrupts are **not** recommended for human-in-the-loop workflows. Use the [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) function instead.
 </Note>
 
 <Tabs>
@@ -931,6 +1001,10 @@ To debug and test a graph, you can use static interrupts as breakpoints to step 
     </Tab>
 </Tabs>
 
+<Tip>
+To debug your interrupts, use [LangSmith](/langsmith/observability).
+</Tip>
+
 ### Using LangSmith Studio
 
 You can use [LangSmith Studio](/langsmith/studio) to set static interrupts in your graph in the UI before running the graph. You can also use the UI to inspect the graph state at any point in the execution.
@@ -939,9 +1013,11 @@ You can use [LangSmith Studio](/langsmith/studio) to set static interrupts in yo
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langgraph/interrupts.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

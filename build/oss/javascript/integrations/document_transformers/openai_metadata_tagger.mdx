@@ -1,7 +1,11 @@
 ---
-title: "OpenAI functions metadata tagger - integration"
-description: "Integrate with the OpenAI functions metadata tagger - document transformer using LangChain JavaScript."
+title: OpenAI functions metadata tagger - integration
+description: Integrate with the OpenAI functions metadata tagger - document transformer using LangChain JavaScript.
+integration:
+  name: OpenAI functions metadata tagger -
+  npm: '@langchain/openai'
 ---
+
 
 It can often be useful to tag ingested documents with structured metadata, such as the title, tone, or length of a document, to allow for more targeted similarity search later. However, for large numbers of documents, performing this labelling process manually can be tedious.
 
@@ -159,9 +163,11 @@ console.log(taggedDocuments);
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/javascript/integrations/document_transformers/openai_metadata_tagger.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

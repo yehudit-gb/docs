@@ -3,6 +3,8 @@ title: Prebuilt middleware
 description: Prebuilt middleware for common agent use cases
 ---
 
+import RubricConfigurePy from '/snippets/javascript/code-samples/rubric-configure-py.mdx';
+
 LangChain and [Deep Agents](/oss/javascript/deepagents/overview) provide prebuilt middleware for common use cases. Each middleware is production-ready and configurable for your specific needs.
 
 ## Provider-agnostic middleware
@@ -13,22 +15,396 @@ The following middleware work with any LLM provider:
 
 | Middleware | Description |
 |------------|-------------|
+| [Tool retry](#tool-retry) | Automatically retry failed tool calls with exponential backoff. |
+| [Model retry](#model-retry) | Automatically retry failed model calls with exponential backoff. |
+| [Model fallback](#model-fallback) | Automatically fallback to alternative models when primary fails. |
 | [Summarization](#summarization) | Automatically summarize conversation history when approaching token limits. |
 | [Human-in-the-loop](#human-in-the-loop) | Pause execution for human approval of tool calls. |
 | [Model call limit](#model-call-limit) | Limit the number of model calls to prevent excessive costs. |
 | [Tool call limit](#tool-call-limit) | Control tool execution by limiting call counts. |
-| [Model fallback](#model-fallback) | Automatically fallback to alternative models when primary fails. |
 | [PII detection](#pii-detection) | Detect and handle Personally Identifiable Information (PII). |
 | [To-do list](#to-do-list) | Equip agents with task planning and tracking capabilities. |
 | [LLM tool selector](#llm-tool-selector) | Use an LLM to select relevant tools before calling main model. |
-| [Tool retry](#tool-retry) | Automatically retry failed tool calls with exponential backoff. |
-| [Model retry](#model-retry) | Automatically retry failed model calls with exponential backoff. |
-| [LLM tool emulator](#llm-tool-emulator) | Emulate tool execution using an LLM for testing purposes. |
+| [Provider tool search](#provider-tool-search) | Defer tools behind providers' server-side tool search, surfacing them on demand. |
+| [Filesystem](#filesystem-middleware) | Provide agents with a filesystem for storing context and long-term memories. |
+| [Subagent middleware](#subagent) | Add the ability to spawn subagents. |
 | [Context editing](#context-editing) | Manage conversation context by trimming or clearing tool uses. |
-| [Filesystem](#filesystem-deepagents) | Provide agents with a filesystem for storing context and long-term memories. |
-| [Subagent middleware](#subagent-deepagents) | Add the ability to spawn subagents. |
+| [LLM tool emulator](#llm-tool-emulator) | Emulate tool execution using an LLM for testing purposes. |
 
 
+
+### Tool error
+
+
+
+### Tool retry
+
+Automatically retry failed tool calls with configurable exponential backoff. Tool retry is useful for the following:
+
+- Handling transient failures in external API calls.
+- Improving reliability of network-dependent tools.
+- Building resilient agents that gracefully handle temporary errors.
+
+
+
+**API reference:** [`toolRetryMiddleware`](https://reference.langchain.com/javascript/langchain/index/toolRetryMiddleware)
+
+```typescript
+import { createAgent, toolRetryMiddleware } from "langchain";
+
+const agent = createAgent({
+  model: "gpt-5.5",
+  tools: [searchTool, databaseTool],
+  middleware: [
+    toolRetryMiddleware({
+      maxRetries: 3,
+      backoffFactor: 2.0,
+      initialDelayMs: 1000,
+    }),
+  ],
+});
+```
+
+
+<Accordion title="Configuration options">
+
+
+
+<ParamField body="maxRetries" type="number" default="2">
+    Maximum number of retry attempts after the initial call (3 total attempts with default). Must be >= 0.
+</ParamField>
+
+<ParamField body="tools" type="(ClientTool | ServerTool | string)[]">
+    Optional array of tools or tool names to apply retry logic to. Can be a list of `BaseTool` instances or tool name strings. If `undefined`, applies to all tools.
+</ParamField>
+
+<ParamField body="retryOn" type="((error: Error) => boolean) | (new (...args: any[]) => Error)[]" default="() => true">
+    Either an array of error constructors to retry on, or a function that takes an error and returns `true` if it should be retried. Default is to retry on all errors.
+</ParamField>
+
+<ParamField body="onFailure" type="'error' | 'continue' | ((error: Error) => string)" default="continue">
+    Behavior when all retries are exhausted. Options:
+    - `'continue'` (default) - Return a `ToolMessage` with error details, allowing the LLM to handle the failure and potentially recover
+    - `'error'` - Re-raise the exception, stopping agent execution
+    - Custom function - Function that takes the exception and returns a string for the `ToolMessage` content, allowing custom error formatting
+
+    **Deprecated values:** `'raise'` (use `'error'` instead) and `'return_message'` (use `'continue'` instead). These deprecated values still work but will show a warning.
+</ParamField>
+
+<ParamField body="backoffFactor" type="number" default="2.0">
+    Multiplier for exponential backoff. Each retry waits `initialDelayMs * (backoffFactor ** retryNumber)` milliseconds. Set to `0.0` for constant delay. Must be >= 0.
+</ParamField>
+
+<ParamField body="initialDelayMs" type="number" default="1000">
+    Initial delay in milliseconds before first retry. Must be >= 0.
+</ParamField>
+
+<ParamField body="maxDelayMs" type="number" default="60000">
+    Maximum delay in milliseconds between retries (caps exponential backoff growth). Must be >= 0.
+</ParamField>
+
+<ParamField body="jitter" type="boolean" default="true">
+    Whether to add random jitter (`±25%`) to delay to avoid thundering herd
+</ParamField>
+
+
+</Accordion>
+
+<Accordion title="Full example">
+
+The middleware automatically retries failed tool calls with exponential backoff.
+
+
+**Key configuration:**
+- `maxRetries` - Number of retry attempts (default: 2)
+- `backoffFactor` - Multiplier for exponential backoff (default: 2.0)
+- `initialDelayMs` - Starting delay in milliseconds (default: 1000ms)
+- `maxDelayMs` - Cap on delay growth (default: 60000ms)
+- `jitter` - Add random variation (default: true)
+
+**Failure handling:**
+- `onFailure: "continue"` (default) - Return error message
+- `onFailure: "error"` - Re-raise exception
+- Custom function - Function returning error message
+
+
+
+
+```typescript
+import { createAgent, toolRetryMiddleware } from "langchain";
+import { tool } from "@langchain/core/tools";
+import { z } from "zod";
+
+// Basic usage with default settings (2 retries, exponential backoff)
+const agent = createAgent({
+  model: "gpt-5.5",
+  tools: [searchTool, databaseTool],
+  middleware: [toolRetryMiddleware()],
+});
+
+// Retry specific exceptions only
+const retry = toolRetryMiddleware({
+  maxRetries: 4,
+  retryOn: [TimeoutError, NetworkError],
+  backoffFactor: 1.5,
+});
+
+// Custom exception filtering
+function shouldRetry(error: Error): boolean {
+  // Only retry on 5xx errors
+  if (error.name === "HTTPError" && "statusCode" in error) {
+    const statusCode = (error as any).statusCode;
+    return 500 <= statusCode && statusCode < 600;
+  }
+  return false;
+}
+
+const retryWithFilter = toolRetryMiddleware({
+  maxRetries: 3,
+  retryOn: shouldRetry,
+});
+
+// Apply to specific tools with custom error handling
+const formatError = (error: Error) =>
+  "Database temporarily unavailable. Please try again later.";
+
+const retrySpecificTools = toolRetryMiddleware({
+  maxRetries: 4,
+  tools: ["search_database"],
+  onFailure: formatError,
+});
+
+// Apply to specific tools using BaseTool instances
+const searchDatabase = tool(
+  async ({ query }) => {
+    // Search implementation
+    return results;
+  },
+  {
+    name: "search_database",
+    description: "Search the database",
+    schema: z.object({ query: z.string() }),
+  }
+);
+
+const retryWithToolInstance = toolRetryMiddleware({
+  maxRetries: 4,
+  tools: [searchDatabase], // Pass BaseTool instance
+});
+
+// Constant backoff (no exponential growth)
+const constantBackoff = toolRetryMiddleware({
+  maxRetries: 5,
+  backoffFactor: 0.0, // No exponential growth
+  initialDelayMs: 2000, // Always wait 2 seconds
+});
+
+// Raise exception on failure
+const strictRetry = toolRetryMiddleware({
+  maxRetries: 2,
+  onFailure: "error", // Re-raise exception instead of returning message
+});
+```
+
+
+</Accordion>
+
+### Model retry
+
+Automatically retry failed model calls with configurable exponential backoff. Model retry is useful for the following:
+
+- Handling transient failures in model API calls.
+- Improving reliability of network-dependent model requests.
+- Building resilient agents that gracefully handle temporary model errors.
+
+
+
+**API reference:** [`modelRetryMiddleware`](https://reference.langchain.com/javascript/langchain/index/modelRetryMiddleware)
+
+```typescript
+import { createAgent, modelRetryMiddleware } from "langchain";
+
+const agent = createAgent({
+  model: "gpt-5.5",
+  tools: [searchTool, databaseTool],
+  middleware: [
+    modelRetryMiddleware({
+      maxRetries: 3,
+      backoffFactor: 2.0,
+      initialDelayMs: 1000,
+    }),
+  ],
+});
+```
+
+
+<Accordion title="Configuration options">
+
+
+
+<ParamField body="maxRetries" type="number" default="2">
+    Maximum number of retry attempts after the initial call (3 total attempts with default). Must be >= 0.
+</ParamField>
+
+<ParamField body="retryOn" type="((error: Error) => boolean) | (new (...args: any[]) => Error)[]" default="() => true">
+    Either an array of error constructors to retry on, or a function that takes an error and returns `true` if it should be retried. Default is to retry on all errors.
+</ParamField>
+
+<ParamField body="onFailure" type="'error' | 'continue' | ((error: Error) => string)" default="continue">
+    Behavior when all retries are exhausted. Options:
+    - `'continue'` (default) - Return an `AIMessage` with error details, allowing the agent to potentially handle the failure gracefully
+    - `'error'` - Re-raise the exception, stopping agent execution
+    - Custom function - Function that takes the exception and returns a string for the `AIMessage` content, allowing custom error formatting
+</ParamField>
+
+<ParamField body="backoffFactor" type="number" default="2.0">
+    Multiplier for exponential backoff. Each retry waits `initialDelayMs * (backoffFactor ** retryNumber)` milliseconds. Set to `0.0` for constant delay. Must be >= 0.
+</ParamField>
+
+<ParamField body="initialDelayMs" type="number" default="1000">
+    Initial delay in milliseconds before first retry. Must be >= 0.
+</ParamField>
+
+<ParamField body="maxDelayMs" type="number" default="60000">
+    Maximum delay in milliseconds between retries (caps exponential backoff growth). Must be >= 0.
+</ParamField>
+
+<ParamField body="jitter" type="boolean" default="true">
+    Whether to add random jitter (`±25%`) to delay to avoid thundering herd
+</ParamField>
+
+
+</Accordion>
+
+<Accordion title="Full example">
+
+The middleware automatically retries failed model calls with exponential backoff.
+
+
+
+```typescript
+import { createAgent, modelRetryMiddleware } from "langchain";
+
+// Basic usage with default settings (2 retries, exponential backoff)
+const agent = createAgent({
+  model: "gpt-5.5",
+  tools: [searchTool],
+  middleware: [modelRetryMiddleware()],
+});
+
+class TimeoutError extends Error {
+    // ...
+}
+class NetworkError extends Error {
+    // ...
+}
+
+// Retry specific exceptions only
+const retry = modelRetryMiddleware({
+  maxRetries: 4,
+  retryOn: [TimeoutError, NetworkError],
+  backoffFactor: 1.5,
+});
+
+// Custom exception filtering
+function shouldRetry(error: Error): boolean {
+  // Only retry on rate limit errors
+  if (error.name === "RateLimitError") {
+    return true;
+  }
+  // Or check for specific HTTP status codes
+  if (error.name === "HTTPError" && "statusCode" in error) {
+    const statusCode = (error as any).statusCode;
+    return statusCode === 429 || statusCode === 503;
+  }
+  return false;
+}
+
+const retryWithFilter = modelRetryMiddleware({
+  maxRetries: 3,
+  retryOn: shouldRetry,
+});
+
+// Return error message instead of raising
+const retryContinue = modelRetryMiddleware({
+  maxRetries: 4,
+  onFailure: "continue", // Return AIMessage with error instead of throwing
+});
+
+// Custom error message formatting
+const formatError = (error: Error) =>
+  `Model call failed: ${error.message}. Please try again later.`;
+
+const retryWithFormatter = modelRetryMiddleware({
+  maxRetries: 4,
+  onFailure: formatError,
+});
+
+// Constant backoff (no exponential growth)
+const constantBackoff = modelRetryMiddleware({
+  maxRetries: 5,
+  backoffFactor: 0.0, // No exponential growth
+  initialDelayMs: 2000, // Always wait 2 seconds
+});
+
+// Raise exception on failure
+const strictRetry = modelRetryMiddleware({
+  maxRetries: 2,
+  onFailure: "error", // Re-raise exception instead of returning message
+});
+```
+
+
+</Accordion>
+
+### Model fallback
+
+Automatically fallback to alternative models when the primary model fails. Model fallback is useful for the following:
+
+- Building resilient agents that handle model outages.
+- Cost optimization by falling back to cheaper models.
+- Provider redundancy across OpenAI, Anthropic, etc.
+
+
+
+```typescript
+import { createAgent, modelFallbackMiddleware } from "langchain";
+
+const agent = createAgent({
+  model: "gpt-5.5",
+  tools: [],
+  middleware: [
+    modelFallbackMiddleware(
+      "gpt-5.4-mini",
+      "claude-3-5-sonnet-20241022"
+    ),
+  ],
+});
+```
+
+
+
+
+<Accordion title="Configuration options">
+
+
+
+The middleware accepts a variable number of string arguments representing fallback models in order:
+
+<ParamField body="...models" type="string[]" required>
+  One or more fallback model strings to try in order when the primary model fails
+
+  ```typescript
+  modelFallbackMiddleware(
+    "first-fallback-model",
+    "second-fallback-model",
+    // ... more models
+  )
+  ```
+</ParamField>
+
+
+</Accordion>
 
 ### Summarization
 
@@ -37,17 +413,21 @@ Automatically summarize conversation history when approaching token limits, pres
 - Multi-turn dialogues with extensive history.
 - Applications where preserving full conversation context matters.
 
+<Note>
+    Summarization is text-oriented context compression. It does not resize, downsample, or otherwise compress image/audio/video payloads. Recent messages retained by `keep` still include their original multimodal blocks, while older multimodal messages that are summarized are represented only by the generated text summary. For image-heavy applications, store media in a filesystem or object store and pass URLs or file references through message history.
+</Note>
+
 
 
 ```typescript
 import { createAgent, summarizationMiddleware } from "langchain";
 
 const agent = createAgent({
-  model: "gpt-4.1",
+  model: "gpt-5.5",
   tools: [weatherTool, calculatorTool],
   middleware: [
     summarizationMiddleware({
-      model: "gpt-4.1-mini",
+      model: "gpt-5.4-mini",
       trigger: { tokens: 4000 },
       keep: { messages: 20 },
     }),
@@ -74,7 +454,7 @@ const agent = createAgent({
 </Tip>
 
 <ParamField body="model" type="string | BaseChatModel" required>
-    Model for generating summaries. Can be a model identifier string (e.g., `'openai:gpt-4.1-mini'`) or a `BaseChatModel` instance.
+    Model for generating summaries. Can be a model identifier string (e.g., `'openai:gpt-5.4-mini'`) or a `BaseChatModel` instance.
 </ParamField>
 
 <ParamField body="trigger" type="object | object[]">
@@ -131,9 +511,10 @@ const agent = createAgent({
 The summarization middleware monitors message token counts and automatically summarizes older messages when thresholds are reached.
 
 **Trigger conditions** control when summarization runs:
-- Single condition object (specified must be met)
-- Array of conditions (any condition must be met - OR logic)
-- Each condition can use `fraction` (of model's context size), `tokens` (absolute count), or `messages` (message count)
+- A single threshold triggers when that threshold is met
+- A trigger clause with multiple thresholds triggers only when all thresholds are met (AND logic)
+- A list of trigger conditions triggers when any item is met (OR logic)
+- Each threshold can use `fraction` (of model's context size), `tokens` (absolute count), or `messages` (message count)
 
 **Keep condition** control how much context to preserve (specify exactly one):
 - `fraction` - Fraction of model's context size to keep
@@ -147,11 +528,11 @@ import { createAgent, summarizationMiddleware } from "langchain";
 
 // Single condition
 const agent = createAgent({
-  model: "gpt-4.1",
+  model: "gpt-5.5",
   tools: [weatherTool, calculatorTool],
   middleware: [
     summarizationMiddleware({
-      model: "gpt-4.1-mini",
+      model: "gpt-5.4-mini",
       trigger: { tokens: 4000, messages: 10 },
       keep: { messages: 20 },
     }),
@@ -160,11 +541,11 @@ const agent = createAgent({
 
 // Multiple conditions
 const agent2 = createAgent({
-  model: "gpt-4.1",
+  model: "gpt-5.5",
   tools: [weatherTool, calculatorTool],
   middleware: [
     summarizationMiddleware({
-      model: "gpt-4.1-mini",
+      model: "gpt-5.4-mini",
       trigger: [
         { tokens: 3000, messages: 6 },
       ],
@@ -175,11 +556,11 @@ const agent2 = createAgent({
 
 // Using fractional limits
 const agent3 = createAgent({
-  model: "gpt-4.1",
+  model: "gpt-5.5",
   tools: [weatherTool, calculatorTool],
   middleware: [
     summarizationMiddleware({
-      model: "gpt-4.1-mini",
+      model: "gpt-5.4-mini",
       trigger: { fraction: 0.8 },
       keep: { fraction: 0.3 },
     }),
@@ -201,7 +582,7 @@ Pause agent execution for human approval, editing, or rejection of tool calls be
 
 
 <Warning>
-    Human-in-the-loop middleware requires a [checkpointer](/oss/javascript/langgraph/persistence#checkpoints) to maintain state across interruptions.
+    Human-in-the-loop middleware requires a [checkpointer](/oss/javascript/langgraph/checkpointers#checkpoints) to maintain state across interruptions.
 </Warning>
 
 
@@ -220,7 +601,7 @@ function sendEmailTool(recipient: string, subject: string, body: string): string
 }
 
 const agent = createAgent({
-  model: "gpt-4.1",
+  model: "gpt-5.5",
   tools: [readEmailTool, sendEmailTool],
   middleware: [
     humanInTheLoopMiddleware({
@@ -262,7 +643,7 @@ import { createAgent, modelCallLimitMiddleware } from "langchain";
 import { MemorySaver } from "@langchain/langgraph";
 
 const agent = createAgent({
-  model: "gpt-4.1",
+  model: "gpt-5.5",
   checkpointer: new MemorySaver(), // Required for thread limiting
   tools: [],
   middleware: [
@@ -318,7 +699,7 @@ Control agent execution by limiting the number of tool calls, either globally ac
 import { createAgent, toolCallLimitMiddleware } from "langchain";
 
 const agent = createAgent({
-  model: "gpt-4.1",
+  model: "gpt-5.5",
   tools: [searchTool, databaseTool],
   middleware: [
     toolCallLimitMiddleware({ threadLimit: 20, runLimit: 10 }),
@@ -390,7 +771,7 @@ const databaseLimiter = toolCallLimitMiddleware({ toolName: "query_database", th
 const strictLimiter = toolCallLimitMiddleware({ toolName: "scrape_webpage", runLimit: 2, exitBehavior: "error" });
 
 const agent = createAgent({
-  model: "gpt-4.1",
+  model: "gpt-5.5",
   tools: [searchTool, databaseTool, scraperTool],
   middleware: [globalLimiter, searchLimiter, databaseLimiter, strictLimiter],
 });
@@ -399,55 +780,6 @@ const agent = createAgent({
 
 </Accordion>
 
-
-### Model fallback
-
-Automatically fallback to alternative models when the primary model fails. Model fallback is useful for the following:
-
-- Building resilient agents that handle model outages.
-- Cost optimization by falling back to cheaper models.
-- Provider redundancy across OpenAI, Anthropic, etc.
-
-
-
-```typescript
-import { createAgent, modelFallbackMiddleware } from "langchain";
-
-const agent = createAgent({
-  model: "gpt-4.1",
-  tools: [],
-  middleware: [
-    modelFallbackMiddleware(
-      "gpt-4.1-mini",
-      "claude-3-5-sonnet-20241022"
-    ),
-  ],
-});
-```
-
-
-
-
-<Accordion title="Configuration options">
-
-
-
-The middleware accepts a variable number of string arguments representing fallback models in order:
-
-<ParamField body="...models" type="string[]" required>
-  One or more fallback model strings to try in order when the primary model fails
-
-  ```typescript
-  modelFallbackMiddleware(
-    "first-fallback-model",
-    "second-fallback-model",
-    // ... more models
-  )
-  ```
-</ParamField>
-
-
-</Accordion>
 
 ### PII detection
 
@@ -463,7 +795,7 @@ Detect and handle Personally Identifiable Information (PII) in conversations usi
 import { createAgent, piiMiddleware } from "langchain";
 
 const agent = createAgent({
-  model: "gpt-4.1",
+  model: "gpt-5.5",
   tools: [],
   middleware: [
     piiMiddleware("email", { strategy: "redact", applyToInput: true }),
@@ -491,7 +823,7 @@ import { createAgent, piiMiddleware, type PIIMatch } from "langchain";
 
 // Method 1: Regex pattern string
 const agent1 = createAgent({
-  model: "gpt-4.1",
+  model: "gpt-5.5",
   tools: [],
   middleware: [
     piiMiddleware("api_key", {
@@ -503,7 +835,7 @@ const agent1 = createAgent({
 
 // Method 2: RegExp object
 const agent2 = createAgent({
-  model: "gpt-4.1",
+  model: "gpt-5.5",
   tools: [],
   middleware: [
     piiMiddleware("phone_number", {
@@ -535,7 +867,7 @@ function detectSSN(content: string): PIIMatch[] {
 }
 
 const agent3 = createAgent({
-  model: "gpt-4.1",
+  model: "gpt-5.5",
   tools: [],
   middleware: [
     piiMiddleware("ssn", {
@@ -637,7 +969,7 @@ Equip agents with task planning and tracking capabilities for complex multi-step
 import { createAgent, todoListMiddleware } from "langchain";
 
 const agent = createAgent({
-  model: "gpt-4.1",
+  model: "gpt-5.5",
   tools: [readFile, writeFile, runTests],
   middleware: [todoListMiddleware()],
 });
@@ -676,11 +1008,11 @@ This middleware uses structured output to ask an LLM which tools are most releva
 import { createAgent, llmToolSelectorMiddleware } from "langchain";
 
 const agent = createAgent({
-  model: "gpt-4.1",
+  model: "gpt-5.5",
   tools: [tool1, tool2, tool3, tool4, tool5, ...],
   middleware: [
     llmToolSelectorMiddleware({
-      model: "gpt-4.1-mini",
+      model: "gpt-5.4-mini",
       maxTools: 3,
       alwaysInclude: ["search"],
     }),
@@ -694,7 +1026,7 @@ const agent = createAgent({
 
 
 <ParamField body="model" type="string | BaseChatModel">
-    Model for tool selection. Can be a model identifier string (e.g., `'openai:gpt-4.1-mini'`) or a `BaseChatModel` instance. Defaults to the agent's main model.
+    Model for tool selection. Can be a model identifier string (e.g., `'openai:gpt-5.4-mini'`) or a `BaseChatModel` instance. Defaults to the agent's main model.
 </ParamField>
 
 <ParamField body="systemPrompt" type="string">
@@ -713,439 +1045,258 @@ const agent = createAgent({
 </Accordion>
 
 
-### Tool retry
-
-Automatically retry failed tool calls with configurable exponential backoff. Tool retry is useful for the following:
-
-- Handling transient failures in external API calls.
-- Improving reliability of network-dependent tools.
-- Building resilient agents that gracefully handle temporary errors.
 
 
+### Provider tool search
 
-**API reference:** [`toolRetryMiddleware`](https://reference.langchain.com/javascript/functions/langchain.index.toolRetryMiddleware.html)
+Defer selected tools behind model providers' server-side tool search, so the model discovers them on demand instead of receiving every tool schema up front. Provider tool search is useful for:
 
-```typescript
-import { createAgent, toolRetryMiddleware } from "langchain";
+- Reducing context bloat when using many tools.
+- Improving tool selection accuracy by surfacing only relevant tools.
 
-const agent = createAgent({
-  model: "gpt-4.1",
-  tools: [searchTool, databaseTool],
-  middleware: [
-    toolRetryMiddleware({
-      maxRetries: 3,
-      backoffFactor: 2.0,
-      initialDelayMs: 1000,
-    }),
-  ],
-});
-```
+<Note>
+    Requires a model with server-side tool search support: Anthropic (Claude Sonnet 4+/Opus 4+/Haiku 4.5+) or OpenAI (gpt-5.5+). Other providers throw an error.
+</Note>
 
-
-<Accordion title="Configuration options">
-
-
-
-<ParamField body="maxRetries" type="number" default="2">
-    Maximum number of retry attempts after the initial call (3 total attempts with default). Must be >= 0.
-</ParamField>
-
-<ParamField body="tools" type="(ClientTool | ServerTool | string)[]">
-    Optional array of tools or tool names to apply retry logic to. Can be a list of `BaseTool` instances or tool name strings. If `undefined`, applies to all tools.
-</ParamField>
-
-<ParamField body="retryOn" type="((error: Error) => boolean) | (new (...args: any[]) => Error)[]" default="() => true">
-    Either an array of error constructors to retry on, or a function that takes an error and returns `true` if it should be retried. Default is to retry on all errors.
-</ParamField>
-
-<ParamField body="onFailure" type="'error' | 'continue' | ((error: Error) => string)" default="continue">
-    Behavior when all retries are exhausted. Options:
-    - `'continue'` (default) - Return a `ToolMessage` with error details, allowing the LLM to handle the failure and potentially recover
-    - `'error'` - Re-raise the exception, stopping agent execution
-    - Custom function - Function that takes the exception and returns a string for the `ToolMessage` content, allowing custom error formatting
-
-    **Deprecated values:** `'raise'` (use `'error'` instead) and `'return_message'` (use `'continue'` instead). These deprecated values still work but will show a warning.
-</ParamField>
-
-<ParamField body="backoffFactor" type="number" default="2.0">
-    Multiplier for exponential backoff. Each retry waits `initialDelayMs * (backoffFactor ** retryNumber)` milliseconds. Set to `0.0` for constant delay. Must be >= 0.
-</ParamField>
-
-<ParamField body="initialDelayMs" type="number" default="1000">
-    Initial delay in milliseconds before first retry. Must be >= 0.
-</ParamField>
-
-<ParamField body="maxDelayMs" type="number" default="60000">
-    Maximum delay in milliseconds between retries (caps exponential backoff growth). Must be >= 0.
-</ParamField>
-
-<ParamField body="jitter" type="boolean" default="true">
-    Whether to add random jitter (`±25%`) to delay to avoid thundering herd
-</ParamField>
-
-
-</Accordion>
-
-<Accordion title="Full example">
-
-The middleware automatically retries failed tool calls with exponential backoff.
-
-
-**Key configuration:**
-- `maxRetries` - Number of retry attempts (default: 2)
-- `backoffFactor` - Multiplier for exponential backoff (default: 2.0)
-- `initialDelayMs` - Starting delay in milliseconds (default: 1000ms)
-- `maxDelayMs` - Cap on delay growth (default: 60000ms)
-- `jitter` - Add random variation (default: true)
-
-**Failure handling:**
-- `onFailure: "continue"` (default) - Return error message
-- `onFailure: "error"` - Re-raise exception
-- Custom function - Function returning error message
-
-
-
+**API reference:** [`providerToolSearchMiddleware`](https://reference.langchain.com/javascript/langchain/index/providerToolSearchMiddleware)
 
 ```typescript
-import { createAgent, toolRetryMiddleware } from "langchain";
+import { createAgent, providerToolSearchMiddleware } from "langchain";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 
-// Basic usage with default settings (2 retries, exponential backoff)
+const getWeather = tool(async () => "Sunny, 22C", {
+  name: "get_weather",
+  description: "Get the current weather for a city",
+  schema: z.object({ city: z.string() }),
+});
+
+const lookupOrderStatus = tool(async () => "OUT_FOR_DELIVERY", {
+  name: "lookup_order_status",
+  description: "Look up the current delivery status of a customer order by ID",
+  schema: z.object({ orderId: z.string() }),
+});
+
+const nicheTools = [lookupOrderStatus];
+
 const agent = createAgent({
-  model: "gpt-4.1",
-  tools: [searchTool, databaseTool],
-  middleware: [toolRetryMiddleware()],
-});
-
-// Retry specific exceptions only
-const retry = toolRetryMiddleware({
-  maxRetries: 4,
-  retryOn: [TimeoutError, NetworkError],
-  backoffFactor: 1.5,
-});
-
-// Custom exception filtering
-function shouldRetry(error: Error): boolean {
-  // Only retry on 5xx errors
-  if (error.name === "HTTPError" && "statusCode" in error) {
-    const statusCode = (error as any).statusCode;
-    return 500 <= statusCode && statusCode < 600;
-  }
-  return false;
-}
-
-const retryWithFilter = toolRetryMiddleware({
-  maxRetries: 3,
-  retryOn: shouldRetry,
-});
-
-// Apply to specific tools with custom error handling
-const formatError = (error: Error) =>
-  "Database temporarily unavailable. Please try again later.";
-
-const retrySpecificTools = toolRetryMiddleware({
-  maxRetries: 4,
-  tools: ["search_database"],
-  onFailure: formatError,
-});
-
-// Apply to specific tools using BaseTool instances
-const searchDatabase = tool(
-  async ({ query }) => {
-    // Search implementation
-    return results;
-  },
-  {
-    name: "search_database",
-    description: "Search the database",
-    schema: z.object({ query: z.string() }),
-  }
-);
-
-const retryWithToolInstance = toolRetryMiddleware({
-  maxRetries: 4,
-  tools: [searchDatabase], // Pass BaseTool instance
-});
-
-// Constant backoff (no exponential growth)
-const constantBackoff = toolRetryMiddleware({
-  maxRetries: 5,
-  backoffFactor: 0.0, // No exponential growth
-  initialDelayMs: 2000, // Always wait 2 seconds
-});
-
-// Raise exception on failure
-const strictRetry = toolRetryMiddleware({
-  maxRetries: 2,
-  onFailure: "error", // Re-raise exception instead of returning message
+  model: "anthropic:claude-opus-4-8",
+  tools: [getWeather, ...nicheTools],
+  middleware: [
+    providerToolSearchMiddleware({ searchableTools: nicheTools }),
+  ],
 });
 ```
 
+<Accordion title="Configuration options">
+
+<ParamField body="searchableTools" type="(string | StructuredToolInterface)[]">
+    Tools to defer behind the provider's tool search, given by name or instance. Deferred tools are withheld from the model until its search surfaces them. Tools constructed with `extras.defer_loading: true` are deferred regardless of this option; if `searchableTools` is omitted, only those pre-marked tools are deferred.
+</ParamField>
 
 </Accordion>
 
-### Model retry
+<Accordion title="Full example">
 
-Automatically retry failed model calls with configurable exponential backoff. Model retry is useful for the following:
-
-- Handling transient failures in model API calls.
-- Improving reliability of network-dependent model requests.
-- Building resilient agents that gracefully handle temporary model errors.
-
-
-
-**API reference:** [`modelRetryMiddleware`](https://reference.langchain.com/javascript/functions/langchain.index.modelRetryMiddleware.html)
+The middleware opts-in all tools included in the `searchableTools` for deferral and search. A tool can also opt into deferral at construction time by setting `extras.defer_loading: true`
 
 ```typescript
-import { createAgent, modelRetryMiddleware } from "langchain";
+import { createAgent, providerToolSearchMiddleware } from "langchain";
+import { tool } from "@langchain/core/tools";
+import { z } from "zod";
+
+// Marked `defer_loading` at construction, so it's deferred on its own —
+// no need to list it in `searchableTools`.
+const sendEmail = tool(async () => "sent", {
+  name: "send_email",
+  description: "Send an email",
+  schema: z.object({ to: z.string() }),
+  extras: { defer_loading: true },
+});
 
 const agent = createAgent({
-  model: "gpt-4.1",
-  tools: [searchTool, databaseTool],
+  model: "anthropic:claude-opus-4-8",
+  tools: [sendEmail],
+  middleware: [providerToolSearchMiddleware()],
+});
+```
+
+</Accordion>
+
+
+
+
+
+### Filesystem middleware
+
+Context engineering is a main challenge in building effective agents. This is particularly difficult when using tools that return variable-length results (for example, `web_search` and RAG), as long tool results can quickly fill your context window.
+
+`FilesystemMiddleware` from [Deep Agents](/oss/javascript/deepagents/overview) provides four tools for interacting with both short-term and long-term memory:
+
+- `ls`: List the files in the filesystem
+- `read_file`: Read an entire file or a certain number of lines from a file
+- `write_file`: Write a new file to the filesystem
+- `edit_file`: Edit an existing file in the filesystem
+
+
+
+```typescript
+import { createAgent } from "langchain";
+import { createFilesystemMiddleware } from "deepagents";
+
+// FilesystemMiddleware is included by default in createDeepAgent
+// You can customize it if building a custom agent
+const agent = createAgent({
+  model: "claude-sonnet-4-6",
   middleware: [
-    modelRetryMiddleware({
-      maxRetries: 3,
-      backoffFactor: 2.0,
-      initialDelayMs: 1000,
+    createFilesystemMiddleware({
+      backend: undefined,  // Optional: custom backend (defaults to StateBackend)
+      systemPrompt: "Write to the filesystem when...",  // Optional custom system prompt override
+      customToolDescriptions: {
+        ls: "Use the ls tool when...",
+        read_file: "Use the read_file tool to...",
+      },  // Optional: Custom descriptions for filesystem tools
     }),
   ],
 });
 ```
 
 
-<Accordion title="Configuration options">
+#### Short-term vs. long-term filesystem
 
-
-
-<ParamField body="maxRetries" type="number" default="2">
-    Maximum number of retry attempts after the initial call (3 total attempts with default). Must be >= 0.
-</ParamField>
-
-<ParamField body="retryOn" type="((error: Error) => boolean) | (new (...args: any[]) => Error)[]" default="() => true">
-    Either an array of error constructors to retry on, or a function that takes an error and returns `true` if it should be retried. Default is to retry on all errors.
-</ParamField>
-
-<ParamField body="onFailure" type="'error' | 'continue' | ((error: Error) => string)" default="continue">
-    Behavior when all retries are exhausted. Options:
-    - `'continue'` (default) - Return an `AIMessage` with error details, allowing the agent to potentially handle the failure gracefully
-    - `'error'` - Re-raise the exception, stopping agent execution
-    - Custom function - Function that takes the exception and returns a string for the `AIMessage` content, allowing custom error formatting
-</ParamField>
-
-<ParamField body="backoffFactor" type="number" default="2.0">
-    Multiplier for exponential backoff. Each retry waits `initialDelayMs * (backoffFactor ** retryNumber)` milliseconds. Set to `0.0` for constant delay. Must be >= 0.
-</ParamField>
-
-<ParamField body="initialDelayMs" type="number" default="1000">
-    Initial delay in milliseconds before first retry. Must be >= 0.
-</ParamField>
-
-<ParamField body="maxDelayMs" type="number" default="60000">
-    Maximum delay in milliseconds between retries (caps exponential backoff growth). Must be >= 0.
-</ParamField>
-
-<ParamField body="jitter" type="boolean" default="true">
-    Whether to add random jitter (`±25%`) to delay to avoid thundering herd
-</ParamField>
-
-
-</Accordion>
-
-<Accordion title="Full example">
-
-The middleware automatically retries failed model calls with exponential backoff.
+By default, these tools write to a local "filesystem" in your graph state. To enable persistent storage across threads, configure a `CompositeBackend` that routes specific paths (like `/memories/`) to a `StoreBackend`.
 
 
 
 ```typescript
-import { createAgent, modelRetryMiddleware } from "langchain";
+import { createAgent } from "langchain";
+import { createFilesystemMiddleware, CompositeBackend, StateBackend, StoreBackend } from "deepagents";
+import { InMemoryStore } from "@langchain/langgraph-checkpoint";
 
-// Basic usage with default settings (2 retries, exponential backoff)
-const agent = createAgent({
-  model: "gpt-4.1",
-  tools: [searchTool],
-  middleware: [modelRetryMiddleware()],
-});
-
-class TimeoutError extends Error {
-    // ...
-}
-class NetworkError extends Error {
-    // ...
-}
-
-// Retry specific exceptions only
-const retry = modelRetryMiddleware({
-  maxRetries: 4,
-  retryOn: [TimeoutError, NetworkError],
-  backoffFactor: 1.5,
-});
-
-// Custom exception filtering
-function shouldRetry(error: Error): boolean {
-  // Only retry on rate limit errors
-  if (error.name === "RateLimitError") {
-    return true;
-  }
-  // Or check for specific HTTP status codes
-  if (error.name === "HTTPError" && "statusCode" in error) {
-    const statusCode = (error as any).statusCode;
-    return statusCode === 429 || statusCode === 503;
-  }
-  return false;
-}
-
-const retryWithFilter = modelRetryMiddleware({
-  maxRetries: 3,
-  retryOn: shouldRetry,
-});
-
-// Return error message instead of raising
-const retryContinue = modelRetryMiddleware({
-  maxRetries: 4,
-  onFailure: "continue", // Return AIMessage with error instead of throwing
-});
-
-// Custom error message formatting
-const formatError = (error: Error) =>
-  `Model call failed: ${error.message}. Please try again later.`;
-
-const retryWithFormatter = modelRetryMiddleware({
-  maxRetries: 4,
-  onFailure: formatError,
-});
-
-// Constant backoff (no exponential growth)
-const constantBackoff = modelRetryMiddleware({
-  maxRetries: 5,
-  backoffFactor: 0.0, // No exponential growth
-  initialDelayMs: 2000, // Always wait 2 seconds
-});
-
-// Raise exception on failure
-const strictRetry = modelRetryMiddleware({
-  maxRetries: 2,
-  onFailure: "error", // Re-raise exception instead of returning message
-});
-```
-
-
-</Accordion>
-
-### LLM tool emulator
-
-Emulate tool execution using an LLM for testing purposes, replacing actual tool calls with AI-generated responses. LLM tool emulators are useful for the following:
-
-- Testing agent behavior without executing real tools.
-- Developing agents when external tools are unavailable or expensive.
-- Prototyping agent workflows before implementing actual tools.
-
-
-
-```typescript
-import { createAgent, toolEmulatorMiddleware } from "langchain";
+const store = new InMemoryStore();
 
 const agent = createAgent({
-  model: "gpt-4.1",
-  tools: [getWeather, searchDatabase, sendEmail],
+  model: "claude-sonnet-4-6",
+  store,
   middleware: [
-    toolEmulatorMiddleware(), // Emulate all tools
+    createFilesystemMiddleware({
+      backend: new CompositeBackend(
+        new StateBackend(),
+        { "/memories/": new StoreBackend() }
+      ),
+      systemPrompt: "Write to the filesystem when...", // Optional custom system prompt override
+      customToolDescriptions: {
+        ls: "Use the ls tool when...",
+        read_file: "Use the read_file tool to...",
+      }, // Optional: Custom descriptions for filesystem tools
+    }),
   ],
 });
 ```
 
 
-<Accordion title="Configuration options">
+When you configure a `CompositeBackend` with a `StoreBackend` for `/memories/`, any files prefixed with **/memories/** are saved to persistent storage and survive across different threads. Files without this prefix remain in ephemeral state storage.
 
+### Subagent
 
+Handing off tasks to subagents isolates context, keeping the main (supervisor) agent's context window clean while still going deep on a task.
 
-<ParamField body="tools" type="(string | ClientTool | ServerTool)[]">
-    List of tool names (string) or tool instances to emulate. If `undefined` (default), ALL tools will be emulated. If empty array `[]`, no tools will be emulated. If array with tool names/instances, only those tools will be emulated.
-</ParamField>
-
-<ParamField body="model" type="string | BaseChatModel">
-    Model to use for generating emulated tool responses. Can be a model identifier string (e.g., `'anthropic:claude-sonnet-4-5-20250929'`) or a `BaseChatModel` instance. Defaults to the agent's model if not specified.
-</ParamField>
-
-
-</Accordion>
-
-<Accordion title="Full example">
-
-The middleware uses an LLM to generate plausible responses for tool calls instead of executing the actual tools.
+The subagents middleware from [Deep Agents](/oss/javascript/deepagents/overview) allows you to supply subagents through a `task` tool.
 
 
 
 ```typescript
-import { createAgent, toolEmulatorMiddleware, tool } from "langchain";
-import * as z from "zod";
+import { tool } from "langchain";
+import { createAgent } from "langchain";
+import { createSubAgentMiddleware } from "deepagents";
+import { z } from "zod";
 
 const getWeather = tool(
-  async ({ location }) => `Weather in ${location}`,
+  async ({ city }: { city: string }) => {
+    return `The weather in ${city} is sunny.`;
+  },
   {
     name: "get_weather",
-    description: "Get the current weather for a location",
-    schema: z.object({ location: z.string() }),
-  }
-);
-
-const sendEmail = tool(
-  async ({ to, subject, body }) => "Email sent",
-  {
-    name: "send_email",
-    description: "Send an email",
+    description: "Get the weather in a city.",
     schema: z.object({
-      to: z.string(),
-      subject: z.string(),
-      body: z.string(),
+      city: z.string(),
     }),
-  }
+  },
 );
 
-// Emulate all tools (default behavior)
 const agent = createAgent({
-  model: "gpt-4.1",
-  tools: [getWeather, sendEmail],
-  middleware: [toolEmulatorMiddleware()],
-});
-
-// Emulate specific tools by name
-const agent2 = createAgent({
-  model: "gpt-4.1",
-  tools: [getWeather, sendEmail],
+  model: "claude-sonnet-4-6",
   middleware: [
-    toolEmulatorMiddleware({
-      tools: ["get_weather"],
-    }),
-  ],
-});
-
-// Emulate specific tools by passing tool instances
-const agent3 = createAgent({
-  model: "gpt-4.1",
-  tools: [getWeather, sendEmail],
-  middleware: [
-    toolEmulatorMiddleware({
-      tools: [getWeather],
-    }),
-  ],
-});
-
-// Use custom model for emulation
-const agent5 = createAgent({
-  model: "gpt-4.1",
-  tools: [getWeather, sendEmail],
-  middleware: [
-    toolEmulatorMiddleware({
-      model: "claude-sonnet-4-5-20250929",
+    createSubAgentMiddleware({
+      defaultModel: "claude-sonnet-4-6",
+      defaultTools: [],
+      subagents: [
+        {
+          name: "weather",
+          description: "This subagent can get weather in cities.",
+          systemPrompt: "Use the get_weather tool to get the weather in a city.",
+          tools: [getWeather],
+          model: "gpt-5.5",
+          middleware: [],
+        },
+      ],
     }),
   ],
 });
 ```
 
 
-</Accordion>
+A subagent is defined with a **name**, **description**, **system prompt**, and **tools**. You can also provide a subagent with a custom **model**, or with additional **middleware**. This can be particularly useful when you want to give the subagent an additional state key to share with the main agent.
+
+For more complex use cases, you can also provide your own prebuilt LangGraph graph as a subagent.
+
+
+
+```typescript
+import { tool, createAgent } from "langchain";
+import { createSubAgentMiddleware, type SubAgent } from "deepagents";
+import { z } from "zod";
+
+const getWeather = tool(
+  async ({ city }: { city: string }) => {
+    return `The weather in ${city} is sunny.`;
+  },
+  {
+    name: "get_weather",
+    description: "Get the weather in a city.",
+    schema: z.object({
+      city: z.string(),
+    }),
+  },
+);
+
+const weatherSubagent: SubAgent = {
+  name: "weather",
+  description: "This subagent can get weather in cities.",
+  systemPrompt: "Use the get_weather tool to get the weather in a city.",
+  tools: [getWeather],
+  model: "gpt-5.5",
+  middleware: [],
+};
+
+const agent = createAgent({
+  model: "claude-sonnet-4-6",
+  middleware: [
+    createSubAgentMiddleware({
+      defaultModel: "claude-sonnet-4-6",
+      defaultTools: [],
+      subagents: [weatherSubagent],
+    }),
+  ],
+});
+```
+
+
+In addition to any user-defined subagents, the main agent has access to a `general-purpose` subagent at all times. This subagent has the same instructions as the main agent and all the tools it has access to. The primary purpose of the `general-purpose` subagent is context isolation—the main agent can delegate a complex task to this subagent and get a concise answer back without bloat from intermediate tool calls.
+
+
+
+
 
 ### Context editing
 
@@ -1161,7 +1312,7 @@ Manage conversation context by clearing older tool call outputs when token limit
 import { createAgent, contextEditingMiddleware, ClearToolUsesEdit } from "langchain";
 
 const agent = createAgent({
-  model: "gpt-4.1",
+  model: "gpt-5.5",
   tools: [],
   middleware: [
     contextEditingMiddleware({
@@ -1182,10 +1333,10 @@ const agent = createAgent({
 
 
 <ParamField body="edits" type="ContextEdit[]" default="[new ClearToolUsesEdit()]">
-    Array of [`ContextEdit`](https://reference.langchain.com/javascript/interfaces/langchain.index.ContextEdit.html) strategies to apply
+    Array of [`ContextEdit`](https://reference.langchain.com/javascript/langchain/index/ContextEdit) strategies to apply
 </ParamField>
 
-**[`ClearToolUsesEdit`](https://reference.langchain.com/javascript/classes/langchain.index.ClearToolUsesEdit.html) options:**
+**[`ClearToolUsesEdit`](https://reference.langchain.com/javascript/langchain/index/ClearToolUsesEdit) options:**
 
 <ParamField body="triggerTokens" type="number" default="100000">
     Token count that triggers the edit. When the conversation exceeds this token count, older tool outputs will be cleared.
@@ -1230,7 +1381,7 @@ The middleware applies context editing strategies when token limits are reached.
 import { createAgent, contextEditingMiddleware, ClearToolUsesEdit } from "langchain";
 
 const agent = createAgent({
-  model: "gpt-4.1",
+  model: "gpt-5.5",
   tools: [searchTool, calculatorTool, databaseTool],
   middleware: [
     contextEditingMiddleware({
@@ -1251,174 +1402,119 @@ const agent = createAgent({
 
 </Accordion>
 
+### LLM tool emulator
 
+Emulate tool execution using an LLM for testing purposes, replacing actual tool calls with AI-generated responses. LLM tool emulators are useful for the following:
 
-### Filesystem middleware
-
-Context engineering is a main challenge in building effective agents. This is particularly difficult when using tools that return variable-length results (for example, `web_search` and RAG), as long tool results can quickly fill your context window.
-
-`FilesystemMiddleware` from [deep agents](/oss/javascript/deepagents/overview) provides four tools for interacting with both short-term and long-term memory:
-
-- `ls`: List the files in the filesystem
-- `read_file`: Read an entire file or a certain number of lines from a file
-- `write_file`: Write a new file to the filesystem
-- `edit_file`: Edit an existing file in the filesystem
+- Testing agent behavior without executing real tools.
+- Developing agents when external tools are unavailable or expensive.
+- Prototyping agent workflows before implementing actual tools.
 
 
 
 ```typescript
-import { createAgent } from "langchain";
-import { createFilesystemMiddleware } from "deepagents";
+import { createAgent, toolEmulatorMiddleware } from "langchain";
 
-// FilesystemMiddleware is included by default in createDeepAgent
-// You can customize it if building a custom agent
 const agent = createAgent({
-  model: "claude-sonnet-4-5-20250929",
+  model: "gpt-5.5",
+  tools: [getWeather, searchDatabase, sendEmail],
   middleware: [
-    createFilesystemMiddleware({
-      backend: undefined,  // Optional: custom backend (defaults to StateBackend)
-      systemPrompt: "Write to the filesystem when...",  // Optional custom system prompt override
-      customToolDescriptions: {
-        ls: "Use the ls tool when...",
-        read_file: "Use the read_file tool to...",
-      },  // Optional: Custom descriptions for filesystem tools
-    }),
+    toolEmulatorMiddleware(), // Emulate all tools
   ],
 });
 ```
 
 
-#### Short-term vs. long-term filesystem
-
-By default, these tools write to a local "filesystem" in your graph state. To enable persistent storage across threads, configure a `CompositeBackend` that routes specific paths (like `/memories/`) to a `StoreBackend`.
+<Accordion title="Configuration options">
 
 
 
-```typescript
-import { createAgent } from "langchain";
-import { createFilesystemMiddleware, CompositeBackend, StateBackend, StoreBackend } from "deepagents";
-import { InMemoryStore } from "@langchain/langgraph-checkpoint";
+<ParamField body="tools" type="(string | ClientTool | ServerTool)[]">
+    List of tool names (string) or tool instances to emulate. If `undefined` (default), ALL tools will be emulated. If empty array `[]`, no tools will be emulated. If array with tool names/instances, only those tools will be emulated.
+</ParamField>
 
-const store = new InMemoryStore();
-
-const agent = createAgent({
-  model: "claude-sonnet-4-5-20250929",
-  store,
-  middleware: [
-    createFilesystemMiddleware({
-      backend: (config) => new CompositeBackend(
-        new StateBackend(config),
-        { "/memories/": new StoreBackend(config) }
-      ),
-      systemPrompt: "Write to the filesystem when...", // Optional custom system prompt override
-      customToolDescriptions: {
-        ls: "Use the ls tool when...",
-        read_file: "Use the read_file tool to...",
-      }, // Optional: Custom descriptions for filesystem tools
-    }),
-  ],
-});
-```
+<ParamField body="model" type="string | BaseChatModel">
+    Model to use for generating emulated tool responses. Can be a model identifier string (e.g., `'google_genai:gemini-3.6-flash'`) or a `BaseChatModel` instance. Defaults to the agent's model if not specified.
+</ParamField>
 
 
-When you configure a `CompositeBackend` with a `StoreBackend` for `/memories/`, any files prefixed with **/memories/** are saved to persistent storage and survive across different threads. Files without this prefix remain in ephemeral state storage.
+</Accordion>
 
-### Subagent
+<Accordion title="Full example">
 
-Handing off tasks to subagents isolates context, keeping the main (supervisor) agent's context window clean while still going deep on a task.
-
-The subagents middleware from [deep agents](/oss/javascript/deepagents/overview) allows you to supply subagents through a `task` tool.
+The middleware uses an LLM to generate plausible responses for tool calls instead of executing the actual tools.
 
 
 
 ```typescript
-import { tool } from "langchain";
-import { createAgent } from "langchain";
-import { createSubAgentMiddleware } from "deepagents";
-import { z } from "zod";
+import { createAgent, toolEmulatorMiddleware, tool } from "langchain";
+import * as z from "zod";
 
 const getWeather = tool(
-  async ({ city }: { city: string }) => {
-    return `The weather in ${city} is sunny.`;
-  },
+  async ({ location }) => `Weather in ${location}`,
   {
     name: "get_weather",
-    description: "Get the weather in a city.",
-    schema: z.object({
-      city: z.string(),
-    }),
-  },
+    description: "Get the current weather for a location",
+    schema: z.object({ location: z.string() }),
+  }
 );
 
+const sendEmail = tool(
+  async ({ to, subject, body }) => "Email sent",
+  {
+    name: "send_email",
+    description: "Send an email",
+    schema: z.object({
+      to: z.string(),
+      subject: z.string(),
+      body: z.string(),
+    }),
+  }
+);
+
+// Emulate all tools (default behavior)
 const agent = createAgent({
-  model: "claude-sonnet-4-5-20250929",
+  model: "gpt-5.5",
+  tools: [getWeather, sendEmail],
+  middleware: [toolEmulatorMiddleware()],
+});
+
+// Emulate specific tools by name
+const agent2 = createAgent({
+  model: "gpt-5.5",
+  tools: [getWeather, sendEmail],
   middleware: [
-    createSubAgentMiddleware({
-      defaultModel: "claude-sonnet-4-5-20250929",
-      defaultTools: [],
-      subagents: [
-        {
-          name: "weather",
-          description: "This subagent can get weather in cities.",
-          systemPrompt: "Use the get_weather tool to get the weather in a city.",
-          tools: [getWeather],
-          model: "gpt-4.1",
-          middleware: [],
-        },
-      ],
+    toolEmulatorMiddleware({
+      tools: ["get_weather"],
+    }),
+  ],
+});
+
+// Emulate specific tools by passing tool instances
+const agent3 = createAgent({
+  model: "gpt-5.5",
+  tools: [getWeather, sendEmail],
+  middleware: [
+    toolEmulatorMiddleware({
+      tools: [getWeather],
+    }),
+  ],
+});
+
+// Use custom model for emulation
+const agent5 = createAgent({
+  model: "gpt-5.5",
+  tools: [getWeather, sendEmail],
+  middleware: [
+    toolEmulatorMiddleware({
+      model: "claude-sonnet-4-6",
     }),
   ],
 });
 ```
 
 
-A subagent is defined with a **name**, **description**, **system prompt**, and **tools**. You can also provide a subagent with a custom **model**, or with additional **middleware**. This can be particularly useful when you want to give the subagent an additional state key to share with the main agent.
-
-For more complex use cases, you can also provide your own pre-built LangGraph graph as a subagent.
-
-
-
-```typescript
-import { tool, createAgent } from "langchain";
-import { createSubAgentMiddleware, type SubAgent } from "deepagents";
-import { z } from "zod";
-
-const getWeather = tool(
-  async ({ city }: { city: string }) => {
-    return `The weather in ${city} is sunny.`;
-  },
-  {
-    name: "get_weather",
-    description: "Get the weather in a city.",
-    schema: z.object({
-      city: z.string(),
-    }),
-  },
-);
-
-const weatherSubagent: SubAgent = {
-  name: "weather",
-  description: "This subagent can get weather in cities.",
-  systemPrompt: "Use the get_weather tool to get the weather in a city.",
-  tools: [getWeather],
-  model: "gpt-4.1",
-  middleware: [],
-};
-
-const agent = createAgent({
-  model: "claude-sonnet-4-5-20250929",
-  middleware: [
-    createSubAgentMiddleware({
-      defaultModel: "claude-sonnet-4-5-20250929",
-      defaultTools: [],
-      subagents: [weatherSubagent],
-    }),
-  ],
-});
-```
-
-
-In addition to any user-defined subagents, the main agent has access to a `general-purpose` subagent at all times. This subagent has the same instructions as the main agent and all the tools it has access to. The primary purpose of the `general-purpose` subagent is context isolation—the main agent can delegate a complex task to this subagent and get a concise answer back without bloat from intermediate tool calls.
+</Accordion>
 
 ## Provider-specific middleware
 
@@ -1431,14 +1527,19 @@ These middleware are optimized for specific LLM providers. See each provider's d
     <Card title="Anthropic" href="/oss/javascript/integrations/middleware/anthropic" icon="/images/providers/anthropic-icon.svg" arrow>
         Prompt caching, bash tool, text editor, memory, and file search middleware for Claude models.
     </Card>
+    <Card title="AWS" href="/oss/javascript/integrations/middleware/aws" icon="brand-aws" arrow>
+        Prompt caching middleware for Amazon Bedrock models.
+    </Card>
 
 </Columns>
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langchain/middleware/built-in.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

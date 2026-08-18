@@ -1,6 +1,9 @@
 ---
-title: "ChatUpstage integration"
-description: "Integrate with the ChatUpstage chat model using LangChain Python."
+title: ChatUpstage integration
+description: Integrate with the ChatUpstage chat model using LangChain Python.
+integration:
+  name: ChatUpstage
+  pypi: langchain-upstage
 ---
 
 This notebook covers how to get started with Upstage chat models.
@@ -41,8 +44,9 @@ chat.invoke("Hello, how are you?")
 
 ```python
 # using chat stream
-for m in chat.stream("Hello, how are you?"):
-    print(m)
+stream = chat.stream_events("Hello, how are you?", version="v3")
+for token in stream.text:
+    print(token, end="", flush=True)
 ```
 
 ## Chaining
@@ -62,9 +66,11 @@ chain.invoke({"english_text": "Hello, how are you?"})
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/python/integrations/chat/upstage.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

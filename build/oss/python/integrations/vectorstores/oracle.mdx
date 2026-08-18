@@ -1,7 +1,23 @@
 ---
-title: "Oracle AI vector search - integration"
-description: "Integrate with the Oracle AI vector search - vector store using LangChain Python."
+title: Oracle AI vector search - integration
+description: Integrate with the Oracle AI vector search - vector store using LangChain Python.
+integration:
+  name: Oracle AI Database
+  pypi: langchain-oracledb
+  featured: true
+  delete_by_id: true
+  filtering: true
+  search_by_vector: true
+  search_with_score: true
+  async_api: true
+  passes_standard_tests: true
+  multi_tenancy: false
+  ids_in_add_documents: true
 ---
+
+
+
+import LangchainCommunityUnmaintained from '/snippets/python/oss/langchain-community-unmaintained.mdx';
 
 Oracle AI Database supports AI workloads where you query data by **meaning** (semantics), not just keywords. It combines **semantic search over unstructured content** with **relational filtering over business data** in a single system—so you can build retrieval workflows (like RAG) without introducing a separate vector database and fragmenting data across multiple platforms.
 
@@ -44,6 +60,8 @@ print("Connection successful!")
 ```
 
 ### Import the required dependencies
+
+<LangchainCommunityUnmaintained />
 
 ```python
 from langchain_oracledb.vectorstores import oraclevs
@@ -95,13 +113,13 @@ for doc in documents_json_list:
 
 ### Create vector stores with different distance metrics
 
-First we will create three vector stores each with different distance functions. Since we have not created indices in them yet, they will just create tables for now. Later we will use these vector stores to create HNSW indicies. To understand more about the different types of indices Oracle AI Vector Search supports, refer to the following [guide](https://docs.oracle.com/en/database/oracle/oracle-database/23/vecse/manage-different-categories-vector-indexes.html).
+First we will create three vector stores each with different distance functions. Since we have not created indices in them yet, they will just create tables for now. Later we will use these vector stores to create HNSW indices. To understand more about the different types of indices Oracle AI Vector Search supports, refer to the following [guide](https://docs.oracle.com/en/database/oracle/oracle-database/23/vecse/manage-different-categories-vector-indexes.html).
 
 You can manually connect to the Oracle Database and will see three tables :
 `Documents_DOT`, `Documents_COSINE` and `Documents_EUCLIDEAN`.
 
 We will then create three additional tables `Documents_DOT_IVF`, `Documents_COSINE_IVF` and `Documents_EUCLIDEAN_IVF` which will be used
-to create IVF indicies on the tables instead of HNSW indices.
+to create IVF indices on the tables instead of HNSW indices.
 
 ```python
 # Ingest documents into Oracle Vector Store using different distance strategies
@@ -616,9 +634,11 @@ Please refer to our complete demo guide [Oracle AI Vector Search End-to-End Demo
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/python/integrations/vectorstores/oracle.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

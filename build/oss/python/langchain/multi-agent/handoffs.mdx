@@ -38,7 +38,7 @@ sequenceDiagram
 
 ## When to use
 
-Use the handoffs pattern when you need to enforce sequential constraints (unlock capabilities only after preconditions are met), the agent needs to converse directly with the user across different states, or you're building multi-stage conversational flows. This pattern is particularly valuable for customer support scenarios where you need to collect information in a specific sequence — for example, collecting a warranty ID before processing a refund.
+Use the handoffs pattern when you need to enforce sequential constraints (unlock capabilities only after preconditions are met), the agent needs to converse directly with the user across different states, or you're building multi-stage conversational flows. This pattern is particularly valuable for customer support scenarios where you need to collect information in a specific sequence—for example, collecting a warranty ID before processing a refund.
 
 ## Basic implementation
 
@@ -298,13 +298,13 @@ def transfer_to_support(
 
 # 3. Create agents with handoff tools
 sales_agent = create_agent(
-    model="anthropic:claude-sonnet-4-20250514",
+    model="google_genai:gemini-3.6-flash",
     tools=[transfer_to_support],
     system_prompt="You are a sales agent. Help with sales inquiries. If asked about technical issues or support, transfer to the support agent.",
 )
 
 support_agent = create_agent(
-    model="anthropic:claude-sonnet-4-20250514",
+    model="google_genai:gemini-3.6-flash",
     tools=[transfer_to_sales],
     system_prompt="You are a support agent. Help with technical issues. If asked about pricing or purchasing, transfer to the sales agent.",
 )
@@ -448,9 +448,11 @@ As you design your multi-agent system, consider:
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langchain/multi-agent/handoffs.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

@@ -3,9 +3,9 @@ title: Manage assistants
 sidebarTitle: Manage assistants
 ---
 
-This page describes how to create, configure, and manage [assistants](/langsmith/assistants). Assistants allow you to customize your [deployed](/langsmith/deployments) graph's behavior through configuration—such as model selection, prompts, and tool availability—without changing the underlying graph code.
+This page describes how to create, configure, and manage [assistants](/langsmith/assistants). Assistants allow you to customize your [deployed](/langsmith/deployment) graph's behavior through configuration—such as model selection, prompts, and tool availability—without changing the underlying graph code.
 
-You can work with the [SDK](https://reference.langchain.com/python/langsmith/deployment/sdk/) or in the [LangSmith UI](https://smith.langchain.com).
+You can work with the [SDK](https://reference.langchain.com/python/langsmith/deployment/sdk/) or in the [LangSmith UI](https://smith.langchain.com?utm_source=docs&utm_medium=cta&utm_campaign=langsmith-signup&utm_content=langsmith-configuration-cloud).
 
 ## Understand assistant configuration
 
@@ -57,7 +57,7 @@ For more information on configuration in [LangGraph](/oss/python/langgraph/overv
 
 ## Create an assistant
 
-Use the [AssistantsClient.create](https://reference.langchain.com/python/langsmith/deployment/sdk/#langgraph_sdk.client.AssistantsClient.create) method to create a new assistant. This method requires:
+Use the [`assistants.create`](https://reference.langchain.com/python/langsmith/deployment/sdk/#langgraph_sdk.client.AssistantsClient.create) method to create a new assistant. This method requires:
 - **Graph ID**: The name of the deployed graph this assistant will use (e.g., `"agent"`).
 - **Context**: Configuration values matching your graph's context schema.
 - **Name**: A descriptive name for the assistant.
@@ -266,7 +266,7 @@ client.runs.stream(thread_id, "62e209ca-9154-432a-b9e9-2d75c7a9219b", input=inpu
 
 ## Create a new version for your assistant
 
-Use the [AssistantsClient.update](https://reference.langchain.com/python/langsmith/deployment/sdk/#langgraph_sdk.client.AssistantsClient.update) method to create a new version of an assistant.
+Use the [`assistants.update`](https://reference.langchain.com/python/langsmith/deployment/sdk/#langgraph_sdk.client.AssistantsClient.update) method to create a new version of an assistant.
 
 <Warning>
 **Updates require full configuration**
@@ -363,7 +363,7 @@ After changing the active version, all runs using this assistant ID will use the
 
 ## Create an assistant
 
-You can create assistants from the [LangSmith UI](https://smith.langchain.com):
+You can create assistants from the [LangSmith UI](https://smith.langchain.com?utm_source=docs&utm_medium=cta&utm_campaign=langsmith-signup&utm_content=langsmith-configuration-cloud):
 
 1. Navigate to your deployment and select the **Assistants** tab.
 1. Click **+ New assistant**.
@@ -426,9 +426,11 @@ Deleting an assistant will delete **all** of its versions. There is currently no
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/langsmith/configuration-cloud.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>

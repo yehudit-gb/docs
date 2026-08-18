@@ -3,12 +3,12 @@ title: Build a multi-source knowledge base with routing
 sidebarTitle: "Router: Knowledge base"
 ---
 
-import ChatModelTabsPy from '/snippets/chat-model-tabs.mdx';
-import ChatModelTabsJs from '/snippets/chat-model-tabs-js.mdx';
+import ChatModelTabsPy from '/snippets/javascript/chat-model-tabs.mdx';
+import ChatModelTabsJs from '/snippets/javascript/chat-model-tabs-js.mdx';
 
 ## Overview
 
-The **router pattern** is a [multi-agent](/oss/javascript/langchain/multi-agent) architecture where a routing step classifies input and directs it to specialized agents, with results synthesized into a combined response. This pattern excels when your organization's knowledge lives across distinct **verticals**—separate knowledge domains that each require their own agent with specialized tools and prompts.
+The **router pattern** is a [multi-agent](/oss/javascript/langchain/multi-agent) architecture where a routing step classifies input and directs it to specialized agents, with results synthesized into a combined response. This pattern excels when your organization's knowledge lives across distinct **verticals** (separate knowledge domains that each require their own agent with specialized tools and prompts).
 
 In this tutorial, you'll build a multi-source knowledge base router that demonstrates these benefits through a realistic enterprise scenario. The system will coordinate three specialists:
 
@@ -28,6 +28,12 @@ graph LR
     D --> F
     E --> F
     F --> G([Combined answer])
+
+    classDef trigger fill:#F6FFDB,stroke:#6E8900,stroke-width:2px,color:#2E3900
+    classDef process fill:#E5F4FF,stroke:#006DDD,stroke-width:2px,color:#030710
+
+    class A,G trigger
+    class B,C,D,E,F process
 ```
 
 ### Why use a router?
@@ -77,16 +83,16 @@ For more details, see our [Installation guide](/oss/javascript/langchain/install
 
 ### LangSmith
 
-Set up [LangSmith](https://smith.langchain.com) to inspect what is happening inside your agent. Then set the following environment variables:
+Set up [LangSmith](https://smith.langchain.com?utm_source=docs&utm_medium=cta&utm_campaign=langsmith-signup&utm_content=oss-langchain-multi-agent-router-knowledge-base) to inspect what is happening inside your agent. Then set the following environment variables:
 
 
 
 <CodeGroup>
-```bash bash
+```bash Shell
 export LANGSMITH_TRACING="true"
 export LANGSMITH_API_KEY="..."
 ```
-```typescript typescript
+```typescript TypeScript
 process.env.LANGSMITH_TRACING = "true";
 process.env.LANGSMITH_API_KEY = "...";
 ```
@@ -254,7 +260,7 @@ Create an agent for each vertical. Each agent has domain-specific tools and a pr
 import { createAgent } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 
-const llm = new ChatOpenAI({ model: "gpt-4.1" });
+const llm = new ChatOpenAI({ model: "gpt-5.5" });
 
 const githubAgent = createAgent({
   model: llm,
@@ -303,7 +309,7 @@ Now build the router workflow using a StateGraph. The workflow has four main ste
 import { StateGraph, START, END, Send } from "@langchain/langgraph";
 import { z } from "zod";
 
-const routerLlm = new ChatOpenAI({ model: "gpt-4.1-mini" });
+const routerLlm = new ChatOpenAI({ model: "gpt-5.4-mini" });
 
 
 // Define structured output schema for the classifier
@@ -668,7 +674,7 @@ const getThread = tool(
 import { createAgent } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 
-const llm = new ChatOpenAI({ model: "gpt-4.1" });
+const llm = new ChatOpenAI({ model: "gpt-5.5" });
 
 const githubAgent = createAgent({
   model: llm,
@@ -700,7 +706,7 @@ shared knowledge and solutions.
   `.trim(),
 });
 
-const routerLlm = new ChatOpenAI({ model: "gpt-4.1-mini" });
+const routerLlm = new ChatOpenAI({ model: "gpt-5.4-mini" });
 
 // Define structured output schema for the classifier
 const ClassificationResultSchema = z.object({
@@ -838,7 +844,7 @@ console.log(result.finalAnswer);
 
 ## 9. Advanced: Stateful routers
 
-The router we've built so far is **stateless**—each request is handled independently with no memory between calls. For multi-turn conversations, you need a **stateful** approach.
+The router we've built so far is **stateless** (each request is handled independently with no memory between calls). For multi-turn conversations, you need a **stateful** approach.
 
 ### Tool wrapper approach
 
@@ -943,13 +949,15 @@ For simpler cases with dynamic tool selection, consider the [subagents pattern](
 - Learn about [handoffs](/oss/javascript/langchain/multi-agent/handoffs) for agent-to-agent conversations
 - Explore the [subagents pattern](/oss/javascript/langchain/multi-agent/subagents-personal-assistant) for centralized orchestration
 - Read the [multi-agent overview](/oss/javascript/langchain/multi-agent) to compare different patterns
-- Use [LangSmith](https://smith.langchain.com) to debug and monitor your router
+- Use [LangSmith](https://smith.langchain.com?utm_source=docs&utm_medium=cta&utm_campaign=langsmith-signup&utm_content=oss-langchain-multi-agent-router-knowledge-base) to debug and monitor your router
 
 ---
 
-<Callout icon="pen-to-square" iconType="regular">
+<div className="source-links">
+<Callout icon="terminal-2">
+    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langchain/multi-agent/router-knowledge-base.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
-<Tip icon="terminal" iconType="regular">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
-</Tip>
+</div>
